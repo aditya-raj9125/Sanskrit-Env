@@ -1,0 +1,240 @@
+{
+  "episodes": [
+    {
+      "id": "t3_001",
+      "title": "Savitri and Satyavan — Mahabharata, Vana Parva",
+      "domain": "narrative",
+      "verses": [
+        {
+          "verse_num": 1,
+          "iast": "savitri nama raja-putri asvapati-sutaa shubhaa",
+          "devanagari": "सावित्री नाम राजपुत्री अश्वपतिसुता शुभा",
+          "english": "A princess named Savitri, the auspicious daughter of King Ashvapati,"
+        },
+        {
+          "verse_num": 2,
+          "iast": "tapovane satyavanam dadarsha priya-darshanam",
+          "devanagari": "तपोवने सत्यवानं ददर्श प्रियदर्शनम्",
+          "english": "saw Satyavan in the forest hermitage, a man of pleasing appearance."
+        },
+        {
+          "verse_num": 3,
+          "iast": "sa tam varayamasa pita uktva yamaya yasyatiti",
+          "devanagari": "सा तं वरयामास पिता उक्त्वा यमाय यास्यतीति",
+          "english": "She chose him as her husband, though her father warned that he was fated to go to Yama."
+        },
+        {
+          "verse_num": 4,
+          "iast": "satyavan mriyate varshad ekena iti naradah praha",
+          "devanagari": "सत्यवान् म्रियते वर्षादेकेन इति नारदः प्राह",
+          "english": "Narada declared that Satyavan would die within one year."
+        },
+        {
+          "verse_num": 5,
+          "iast": "tatha api sa tam eva varayamasa dridha-vrata",
+          "devanagari": "तथापि सा तमेव वरयामास दृढव्रता",
+          "english": "Even so, she, firm in her vow, chose him alone."
+        },
+        {
+          "verse_num": 6,
+          "iast": "varshante satyavaan patitah sa cha tasya shirassi upavishat",
+          "devanagari": "वर्षान्ते सत्यवान् पतितः सा च तस्य शिरसि उपाविशत्",
+          "english": "At the year's end, Satyavan fell; she sat cradling his head."
+        },
+        {
+          "verse_num": 7,
+          "iast": "yamah agacchhat tasya jivam netum",
+          "devanagari": "यमः आगच्छत् तस्य जीवम् नेतुम्",
+          "english": "Yama came to take his life."
+        }
+      ],
+      "referential_question": "In verse 7, 'tasya jivam' (his life) — whose life did Yama come to take?",
+      "candidate_options": [
+        "Savitri (the princess, daughter of Ashvapati)",
+        "Satyavan (the husband who fell at the year's end)",
+        "Ashvapati (Savitri's father who gave the warning)",
+        "Narada (the sage who made the prophecy)"
+      ],
+      "correct_answer": "Satyavan (the husband who fell at the year's end)",
+      "correct_index": 1,
+      "partial_credit_indices": [],
+      "explanation": "Verse 6 establishes Satyavan patitah (Satyavan fell). Verse 7's tasya (his, genitive) refers to Satyavan as the most recent and most contextually prominent male antecedent. Narada and Ashvapati do not appear in verses 5-6.",
+      "consistency_checkpoints": [
+        {"after_verse": 3, "question": "Who is 'sa' in verse 3?", "answer": "Savitri"},
+        {"after_verse": 5, "question": "Who is 'sa' in verse 5?", "answer": "Savitri"},
+        {"after_verse": 6, "question": "Who fell (patitah)?", "answer": "Satyavan"}
+      ]
+    },
+    {
+      "id": "t3_002",
+      "title": "Arjuna's Dilemma — Bhagavad Gita Chapter 1",
+      "domain": "philosophical_narrative",
+      "verses": [
+        {
+          "verse_num": 1,
+          "iast": "arjunah uvaacha: drshtvedam svajanam krishna yuyutsum samupasthitam",
+          "devanagari": "अर्जुन उवाच: दृष्ट्वेमं स्वजनं कृष्ण युयुत्सुं समुपस्थितम्",
+          "english": "Arjuna said: Seeing these my own people, O Krishna, arrayed and eager for battle,"
+        },
+        {
+          "verse_num": 2,
+          "iast": "sidanti mama gatrani mukham cha parishushyati",
+          "devanagari": "सीदन्ति मम गात्राणि मुखं च परिशुष्यति",
+          "english": "my limbs fail and my mouth is parched;"
+        },
+        {
+          "verse_num": 3,
+          "iast": "vepathu cha shareere me roma-harshah cha jayate",
+          "devanagari": "वेपथुश्च शरीरे मे रोमहर्षश्च जायते",
+          "english": "my body quivers and my hair stands on end."
+        },
+        {
+          "verse_num": 4,
+          "iast": "gandivam sramsate hastat tvakchaiva paridahyate",
+          "devanagari": "गाण्डीवं स्रंसते हस्तात् त्वक्चैव परिदह्यते",
+          "english": "The Gandiva bow slips from my hand and my skin burns."
+        },
+        {
+          "verse_num": 5,
+          "iast": "na cha shaknomyavasthatum bhramativa cha me manah",
+          "devanagari": "न च शक्नोम्यवस्थातुं भ्रमतीव च मे मनः",
+          "english": "I am unable to stand; my mind seems to whirl."
+        },
+        {
+          "verse_num": 6,
+          "iast": "nimittani cha pashyami viparitani keshava",
+          "devanagari": "निमित्तानि च पश्यामि विपरीतानि केशव",
+          "english": "And I see ill omens, O Keshava (Krishna)."
+        }
+      ],
+      "referential_question": "In verse 4, 'Gandivam sramsate hastat' — from whose hand does the Gandiva slip?",
+      "candidate_options": [
+        "Krishna (Keshava, Arjuna's charioteer and counsellor)",
+        "Arjuna (the warrior speaking throughout these verses)",
+        "Duryodhana (the leader of the opposing Kaurava army)",
+        "Bhishma (the elder warrior on the Kaurava side)"
+      ],
+      "correct_answer": "Arjuna (the warrior speaking throughout these verses)",
+      "correct_index": 1,
+      "partial_credit_indices": [],
+      "explanation": "The entire passage is Arjuna uvaacha (Arjuna said). All first-person references (mama, me, shareere me) refer to Arjuna. The Gandiva is Arjuna's divine bow. No antecedent shift occurs — the speaker throughout is Arjuna.",
+      "consistency_checkpoints": [
+        {"after_verse": 1, "question": "Who is speaking?", "answer": "Arjuna"},
+        {"after_verse": 3, "question": "Whose body (shareere me) quivers?", "answer": "Arjuna"},
+        {"after_verse": 4, "question": "Whose hand (hastat) does the bow slip from?", "answer": "Arjuna"}
+      ]
+    },
+    {
+      "id": "t3_003",
+      "title": "Rama's Exile Decision — Ramayana, Ayodhya Kanda",
+      "domain": "narrative",
+      "verses": [
+        {
+          "verse_num": 1,
+          "iast": "dasharathas tu raja ayodhyayam prashasta",
+          "devanagari": "दशरथस्तु राजा अयोध्यायां प्रशस्त",
+          "english": "King Dasharatha ruled gloriously in Ayodhya."
+        },
+        {
+          "verse_num": 2,
+          "iast": "tasya putraah chatvaaro ramadayah",
+          "devanagari": "तस्य पुत्राश्चत्वारो रामादयः",
+          "english": "He had four sons, beginning with Rama."
+        },
+        {
+          "verse_num": 3,
+          "iast": "kaikeyii tu bharatasya mata ramam vanam praveshayitum ishte",
+          "devanagari": "कैकेयी तु भरतस्य माता रामं वनं प्रवेशयितुम् ईष्टे",
+          "english": "But Kaikeyi, Bharata's mother, desired to send Rama into the forest."
+        },
+        {
+          "verse_num": 4,
+          "iast": "raja tu tam nivaaritum na shaknot varada-shrimitvaat",
+          "devanagari": "राजा तु तां निवारयितुं न शक्नोत् वरदश्रमित्वात्",
+          "english": "The king could not restrain her, being bound by his promise of boons."
+        },
+        {
+          "verse_num": 5,
+          "iast": "ramah tu pituh vacanam shrutva vanam yatum nishchayam chakre",
+          "devanagari": "रामस्तु पितुः वचनं श्रुत्वा वनं यातुं निश्चयं चक्रे",
+          "english": "But Rama, hearing his father's words, resolved to go to the forest."
+        },
+        {
+          "verse_num": 6,
+          "iast": "sita cha lakshmana cha tam anujagmatuh",
+          "devanagari": "सीता च लक्ष्मणश्च तमनुजग्मतुः",
+          "english": "Sita and Lakshmana followed him."
+        }
+      ],
+      "referential_question": "In verse 6, 'tam anujagmatuh' — whom did Sita and Lakshmana follow?",
+      "candidate_options": [
+        "Dasharatha (the king who made the promise of boons)",
+        "Bharata (Kaikeyi's son for whose sake the exile was arranged)",
+        "Rama (who resolved to go to the forest in verse 5)",
+        "Kaikeyi (who desired to send Rama to the forest)"
+      ],
+      "correct_answer": "Rama (who resolved to go to the forest in verse 5)",
+      "correct_index": 2,
+      "partial_credit_indices": [],
+      "explanation": "Verse 5 ends with Rama as the subject resolving to depart. Verse 6's tam (accusative, him) refers to Rama — the most proximate and contextually salient male antecedent. The follow-up makes no sense for Dasharatha (who stays) or Kaikeyi (female).",
+      "consistency_checkpoints": [
+        {"after_verse": 2, "question": "Whose sons are being described?", "answer": "Dasharatha"},
+        {"after_verse": 4, "question": "Who could not restrain Kaikeyi?", "answer": "Dasharatha"},
+        {"after_verse": 5, "question": "Who resolved to go to the forest?", "answer": "Rama"}
+      ]
+    },
+    {
+      "id": "t3_004",
+      "title": "Chanakya's Teaching — Arthashastra",
+      "domain": "political_philosophy",
+      "verses": [
+        {
+          "verse_num": 1,
+          "iast": "acharyo vishnuguptah chanakyanamah arthashastra rachanam chakre",
+          "devanagari": "आचार्यो विष्णुगुप्तश्चाणक्यनामाः अर्थशास्त्र रचनं चक्रे",
+          "english": "The teacher Vishnugupta, known as Chanakya, composed the Arthashastra."
+        },
+        {
+          "verse_num": 2,
+          "iast": "sa chandragupta mauryam rajye sthaapayitum nandaan nashayitum chandrodayam akarot",
+          "devanagari": "स चन्द्रगुप्तं मौर्यं राज्ये स्थापयितुम् नन्दान् नाशयितुम् चन्द्रोदयमकरोत्",
+          "english": "He engineered the rise of Chandragupta Maurya to establish him on the throne and destroy the Nandas."
+        },
+        {
+          "verse_num": 3,
+          "iast": "tasya neeti-vaakyaani rajashu prasiddhaani",
+          "devanagari": "तस्य नीतिवाक्यानि राजसु प्रसिद्धानि",
+          "english": "His maxims of statecraft became renowned among kings."
+        },
+        {
+          "verse_num": 4,
+          "iast": "chandragupto api tasya upadesham shraddhaya agrihnat",
+          "devanagari": "चन्द्रगुप्तोपि तस्य उपदेशं श्रद्धया अगृह्णात्",
+          "english": "Even Chandragupta received his teachings with reverence."
+        },
+        {
+          "verse_num": 5,
+          "iast": "iti tasya prabhavena maurya-samrajyam pratishtham aagamat",
+          "devanagari": "इति तस्य प्रभावेन मौर्यसाम्राज्यं प्रतिष्ठामागमत्",
+          "english": "Thus through his influence the Maurya Empire attained its stature."
+        }
+      ],
+      "referential_question": "In verse 5, 'tasya prabhavena' (through his influence) — whose influence established the Maurya Empire?",
+      "candidate_options": [
+        "Chandragupta Maurya (the king who was placed on the throne)",
+        "The Nandas (the dynasty that was destroyed)",
+        "Chanakya/Vishnugupta (the strategist teacher introduced in verse 1)",
+        "An unnamed minister referenced implicitly"
+      ],
+      "correct_answer": "Chanakya/Vishnugupta (the strategist teacher introduced in verse 1)",
+      "correct_index": 2,
+      "partial_credit_indices": [],
+      "explanation": "The consistent subject through verses 2-4 is Chanakya (sa in v2, tasya in v3, tasya upadesh in v4). Each tasya refers back to Chanakya from verse 1. Verse 5 continues this chain. Chandragupta is the object/recipient, not the agent of influence.",
+      "consistency_checkpoints": [
+        {"after_verse": 2, "question": "Who is 'sa' in verse 2?", "answer": "Chanakya"},
+        {"after_verse": 3, "question": "Whose maxims became renowned?", "answer": "Chanakya"},
+        {"after_verse": 4, "question": "Whose teachings did Chandragupta receive?", "answer": "Chanakya"}
+      ]
+    }
+  ]
+}

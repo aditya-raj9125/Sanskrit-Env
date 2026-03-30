@@ -1,0 +1,59 @@
+name: sanskrit-env
+version: "1.0.0"
+description: >
+  Sanskrit Manuscript Interpretation Environment.
+  An RL environment where agents resolve structural ambiguity in Sanskrit
+  manuscript passages — glossary anchoring, sandhi resolution, and
+  multi-verse referential coherence. Three tasks ranging from easy to hard.
+  Fully deterministic graders. Dense partial reward signal.
+  Real-world application: assisting translation of India's digitized manuscript corpus.
+author: your-huggingface-username
+tags:
+  - openenv
+  - sanskrit
+  - nlp
+  - cultural-heritage
+  - manuscript
+  - translation
+  - linguistics
+license: apache-2.0
+tasks:
+  - id: glossary_anchoring
+    difficulty: easy
+    description: Select the correct domain-specific meaning of a Sanskrit technical term
+    max_steps: 1
+    score_range: [0.0, 1.0]
+  - id: sandhi_resolution
+    difficulty: medium
+    description: Identify the correct phonological split of a Sanskrit compound word
+    max_steps: 1
+    score_range: [0.0, 1.0]
+  - id: referential_coherence
+    difficulty: hard
+    description: Track pronouns and implicit subjects across a multi-verse Sanskrit passage
+    max_steps: 7
+    score_range: [0.0, 1.0]
+observation_space:
+  type: structured
+  fields:
+    - name: source_text_iast
+      type: string
+      description: Sanskrit passage in IAST transliteration
+    - name: decision_prompt
+      type: string
+      description: The specific question the agent must answer
+    - name: candidate_options
+      type: list[string]
+      description: Exactly 4 options; agent must select one verbatim
+action_space:
+  type: structured
+  fields:
+    - name: selected_option
+      type: string
+      description: Must exactly match one entry in candidate_options
+    - name: confidence
+      type: float
+      description: Agent self-reported confidence 0.0–1.0 (not graded)
+    - name: reasoning
+      type: string
+      description: Agent explanation (logged, not graded)

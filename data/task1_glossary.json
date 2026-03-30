@@ -1,0 +1,156 @@
+{
+  "episodes": [
+    {
+      "id": "t1_001",
+      "domain": "ayurveda",
+      "source_text_iast": "agnis tridosha-shamanam karoti",
+      "source_text_devanagari": "अग्निस्त्रिदोषशमनं करोति",
+      "english_context": "Passage from Charaka Samhita discussing bodily processes.",
+      "target_term_iast": "agni",
+      "decision_prompt": "The term 'agni' appears in this Ayurvedic passage. Which meaning is correct in this domain context?",
+      "candidate_options": [
+        "fire (the physical element, one of pancha-bhuta)",
+        "digestive fire (jatharagni, the metabolic and digestive power)",
+        "the deity Agni (Vedic god of fire and sacrifice)",
+        "heat sensation (daha, a symptom of pitta imbalance)"
+      ],
+      "correct_answer": "digestive fire (jatharagni, the metabolic and digestive power)",
+      "correct_index": 1,
+      "partial_credit_indices": [3],
+      "explanation": "In Ayurvedic texts, agni specifically refers to jatharagni, the digestive fire responsible for metabolism. The physical fire element would be inappropriate in a clinical context about dosha balance."
+    },
+    {
+      "id": "t1_002",
+      "domain": "ayurveda",
+      "source_text_iast": "vata-pitta-kapha iti trayah doshaah",
+      "source_text_devanagari": "वातपित्तकफ इति त्रयः दोषाः",
+      "english_context": "Foundational passage from Ashtanga Hridayam listing the three doshas.",
+      "target_term_iast": "vata",
+      "decision_prompt": "The term 'vata' appears in this Ayurvedic classification. Which meaning is correct here?",
+      "candidate_options": [
+        "wind (literal atmospheric air or breeze)",
+        "vata dosha (the humor governing movement, circulation, and neural functions)",
+        "breath (prana, the vital life-force)",
+        "speech (vac, the faculty of articulation)"
+      ],
+      "correct_answer": "vata dosha (the humor governing movement, circulation, and neural functions)",
+      "correct_index": 1,
+      "partial_credit_indices": [2],
+      "explanation": "In a dosha-classification context, vata always refers to the Ayurvedic humor, not literal wind."
+    },
+    {
+      "id": "t1_003",
+      "domain": "astronomy",
+      "source_text_iast": "suryo grahanam raja",
+      "source_text_devanagari": "सूर्यो ग्रहाणां राजा",
+      "english_context": "Passage from Aryabhatiya — astronomical treatise by Aryabhata.",
+      "target_term_iast": "graha",
+      "decision_prompt": "The term 'graha' appears in this astronomical text. Which meaning is correct?",
+      "candidate_options": [
+        "planet (celestial body tracked in Jyotisha astronomy)",
+        "seizure (grahanam, a medical term for convulsive episode)",
+        "eclipse (grahana, the astronomical phenomenon of obscuration)",
+        "house (in Jyotisha astrology, one of the 12 bhavas)"
+      ],
+      "correct_answer": "planet (celestial body tracked in Jyotisha astronomy)",
+      "correct_index": 0,
+      "partial_credit_indices": [2],
+      "explanation": "In the Aryabhatiya, graha specifically means planet. The Sun (surya) is called the king of planets."
+    },
+    {
+      "id": "t1_004",
+      "domain": "philosophy",
+      "source_text_iast": "atma nityah sarvagatah sthanuh achalo'yam",
+      "source_text_devanagari": "आत्मा नित्यः सर्वगतः स्थाणुः अचलोऽयम्",
+      "english_context": "Verse from Bhagavad Gita Chapter 2, describing the nature of the self.",
+      "target_term_iast": "atma",
+      "decision_prompt": "The term 'atma' appears in this Vedantic philosophical verse. Which meaning is most precise here?",
+      "candidate_options": [
+        "breath (the physical act of respiration)",
+        "self (the individual ego or personality)",
+        "the eternal self (the unchanging, omnipresent pure consciousness beyond body and mind)",
+        "the body (the physical form and its vital functions)"
+      ],
+      "correct_answer": "the eternal self (the unchanging, omnipresent pure consciousness beyond body and mind)",
+      "correct_index": 2,
+      "partial_credit_indices": [1],
+      "explanation": "The qualifiers nityah (eternal), sarvagatah (omnipresent), sthanuh (immovable) indicate the Vedantic atman, not the ego or body."
+    },
+    {
+      "id": "t1_005",
+      "domain": "philosophy",
+      "source_text_iast": "ahimsa paramo dharmah dharma himsa tathaiva cha",
+      "source_text_devanagari": "अहिंसा परमो धर्मः धर्म हिंसा तथैव च",
+      "english_context": "Verse from Mahabharata — Anushasana Parva, on dharmic principles.",
+      "target_term_iast": "dharma",
+      "decision_prompt": "The term 'dharma' in this ethical verse should be interpreted as:",
+      "candidate_options": [
+        "religion (a specific organized religious tradition)",
+        "law (codified civil or criminal legal statutes)",
+        "righteous duty (moral law, cosmic order, and ethical obligation)",
+        "caste duty (varna-specific occupational obligations only)"
+      ],
+      "correct_answer": "righteous duty (moral law, cosmic order, and ethical obligation)",
+      "correct_index": 2,
+      "partial_credit_indices": [3],
+      "explanation": "In an ethical aphorism context pairing ahimsa with dharma, the term refers to universal moral law, not caste or religion specifically."
+    },
+    {
+      "id": "t1_006",
+      "domain": "ayurveda",
+      "source_text_iast": "ojas sharira-balam iti proktam",
+      "source_text_devanagari": "ओजः शरीरबलमिति प्रोक्तम्",
+      "english_context": "Passage from Sushruta Samhita on bodily vitality.",
+      "target_term_iast": "ojas",
+      "decision_prompt": "The term 'ojas' in this Ayurvedic passage on bodily strength means:",
+      "candidate_options": [
+        "water (the fluid element in the body)",
+        "vital essence (the finest product of digestion, responsible for immunity and vitality)",
+        "strength (sheer physical muscular power)",
+        "intelligence (the cognitive faculty of the mind)"
+      ],
+      "correct_answer": "vital essence (the finest product of digestion, responsible for immunity and vitality)",
+      "correct_index": 1,
+      "partial_credit_indices": [2],
+      "explanation": "Ojas is a specific Ayurvedic concept — the subtle essence of all seven dhatus, responsible for immunity and radiant health. Context pairing it with sharira-balam (body-strength) confirms this."
+    },
+    {
+      "id": "t1_007",
+      "domain": "astronomy",
+      "source_text_iast": "nakshatra-mandalam bha-chakram uchyate",
+      "source_text_devanagari": "नक्षत्रमण्डलं भचक्रमुच्यते",
+      "english_context": "Passage from Brahmasphutasiddhanta — astronomical treatise by Brahmagupta.",
+      "target_term_iast": "nakshatra",
+      "decision_prompt": "The term 'nakshatra' in this astronomical passage refers to:",
+      "candidate_options": [
+        "star (any individual stellar body in the sky)",
+        "lunar mansion (one of 27 or 28 divisions of the ecliptic used in Jyotisha)",
+        "constellation (any named grouping of stars in Indian astronomy)",
+        "comet (a transient celestial visitor)"
+      ],
+      "correct_answer": "lunar mansion (one of 27 or 28 divisions of the ecliptic used in Jyotisha)",
+      "correct_index": 1,
+      "partial_credit_indices": [0],
+      "explanation": "In an astronomical text using the term nakshatra-mandalam (circle of nakshatras), this specifically refers to the 27/28 lunar mansions of the zodiac, not stars generically."
+    },
+    {
+      "id": "t1_008",
+      "domain": "philosophy",
+      "source_text_iast": "maya avidya iti ekam",
+      "source_text_devanagari": "माया अविद्या इति एकम्",
+      "english_context": "Commentary passage from Shankaracharya's Vivekachudamani.",
+      "target_term_iast": "maya",
+      "decision_prompt": "The term 'maya' in this Advaita Vedanta text means:",
+      "candidate_options": [
+        "illusion (a simple visual trick or optical misperception)",
+        "magic (supernatural powers or occult practices)",
+        "the cosmic power of illusion (the inexplicable power that makes Brahman appear as the phenomenal world)",
+        "deception (deliberate human dishonesty or trickery)"
+      ],
+      "correct_answer": "the cosmic power of illusion (the inexplicable power that makes Brahman appear as the phenomenal world)",
+      "correct_index": 2,
+      "partial_credit_indices": [0],
+      "explanation": "In Advaita Vedanta, maya is a technical term for the metaphysical principle that projects diversity onto non-dual Brahman. The equation with avidya (ignorance) confirms the Vedantic technical sense."
+    }
+  ]
+}

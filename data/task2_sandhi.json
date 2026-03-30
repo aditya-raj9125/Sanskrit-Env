@@ -1,0 +1,156 @@
+{
+  "episodes": [
+    {
+      "id": "t2_001",
+      "source_text_iast": "maharshayah sapta purve chatvaaro manavas tatha",
+      "source_text_devanagari": "महर्षयः सप्त पूर्वे चत्वारो मनवस्तथा",
+      "english_context": "Bhagavad Gita 10.6 — Krishna describing divine sages.",
+      "compound_iast": "maharshayah",
+      "decision_prompt": "How does the compound 'maharshayah' correctly split in this context?",
+      "candidate_options": [
+        "maha + arshayah (great + oblations/offerings)",
+        "maha + rishayah (great + sages)",
+        "mahar + shayah (of greatness + sleeping/resting)",
+        "ma + harshayah (not + causing joy)"
+      ],
+      "correct_answer": "maha + rishayah (great + sages)",
+      "correct_index": 1,
+      "partial_credit_indices": [],
+      "explanation": "The verse explicitly lists divine sages (rishis). Maha-rishi = great sage. The visarga sandhi converts rishi-aḥ to rishayah. Option A is grammatically implausible in context.",
+      "domain": "philosophy"
+    },
+    {
+      "id": "t2_002",
+      "source_text_iast": "dharmasya glanirbhavati bharata",
+      "source_text_devanagari": "धर्मस्य ग्लानिर्भवति भारत",
+      "english_context": "Bhagavad Gita 4.7 — on the decline of dharma.",
+      "compound_iast": "glanirbhavati",
+      "decision_prompt": "How does 'glanirbhavati' correctly split in this verse?",
+      "candidate_options": [
+        "glani + rbhavati (exhaustion + an unclear root)",
+        "glanir + bhavati (decline/decay + occurs/becomes)",
+        "gla + nirbhavati (unknown root + manifests without)",
+        "glanih + avati (decline + protects)"
+      ],
+      "correct_answer": "glanir + bhavati (decline/decay + occurs/becomes)",
+      "correct_index": 1,
+      "partial_credit_indices": [],
+      "explanation": "Glanis (decline, exhaustion) undergoes visarga sandhi before bh, converting visarga to r. Glanir-bhavati = 'decline occurs'. This is a standard visarga sandhi rule before voiced consonants.",
+      "domain": "philosophy"
+    },
+    {
+      "id": "t2_003",
+      "source_text_iast": "satyameva jayate nanritam",
+      "source_text_devanagari": "सत्यमेव जयते नानृतम्",
+      "english_context": "Mundaka Upanishad 3.1.6 — the national motto of India.",
+      "compound_iast": "satyameva",
+      "decision_prompt": "How does 'satyameva' correctly split?",
+      "candidate_options": [
+        "satya + meva (truth + only-this [unclear])",
+        "sat + yameva (being + which-very)",
+        "satyam + eva (truth + indeed/alone)",
+        "satyame + va (a questionable split with no meaning)"
+      ],
+      "correct_answer": "satyam + eva (truth + indeed/alone)",
+      "correct_index": 2,
+      "partial_credit_indices": [],
+      "explanation": "Satyam (truth, accusative) + eva (indeed/alone) with standard m+e sandhi producing satyameva. The sentence means 'truth alone triumphs, not falsehood'.",
+      "domain": "philosophy"
+    },
+    {
+      "id": "t2_004",
+      "source_text_iast": "vidyarambhe vivahe cha pravase nirgame tatha",
+      "source_text_devanagari": "विद्यारम्भे विवाहे च प्रवासे निर्गमे तथा",
+      "english_context": "Verse from Arthashastra listing occasions for auspicious timing.",
+      "compound_iast": "vidyarambhe",
+      "decision_prompt": "How does 'vidyarambhe' correctly split in this context about auspicious occasions?",
+      "candidate_options": [
+        "vid + yarambhe (knowledge-root + an unclear form)",
+        "vidya + arambhe (knowledge/learning + at the beginning of)",
+        "vidyar + ambhe (unclear + in water)",
+        "vi + dyarambhe (prefix vi + unclear compound)"
+      ],
+      "correct_answer": "vidya + arambhe (knowledge/learning + at the beginning of)",
+      "correct_index": 1,
+      "partial_credit_indices": [],
+      "explanation": "Vidya (knowledge/education) + arambhe (locative of arambha, beginning). Standard a+a sandhi yields a. The verse lists life events: beginning of education, marriage, travel departure.",
+      "domain": "political_philosophy"
+    },
+    {
+      "id": "t2_005",
+      "source_text_iast": "arogya paramam bhagyam rogahetuhu apatyata",
+      "source_text_devanagari": "आरोग्यं परमं भाग्यं रोगहेतुः अपत्यता",
+      "english_context": "Passage from Charaka Samhita on health as the highest fortune.",
+      "compound_iast": "rogahetuhu",
+      "decision_prompt": "How does 'rogahetuhu' correctly split in this Ayurvedic passage?",
+      "candidate_options": [
+        "roga + hetuhu (disease + the cause/reason)",
+        "rogahe + tuhu (unclear split)",
+        "ro + gahetuhu (unclear split)",
+        "rogah + etuhu (disease-nominative + unclear)"
+      ],
+      "correct_answer": "roga + hetuhu (disease + the cause/reason)",
+      "correct_index": 0,
+      "partial_credit_indices": [],
+      "explanation": "Roga (disease) + hetu (cause), nominative singular hetuhu. The compound means 'the cause of disease'. Standard tatpurusha compound, no sandhi change needed between a+h.",
+      "domain": "ayurveda"
+    },
+    {
+      "id": "t2_006",
+      "source_text_iast": "tamasomajyotirgamaya mrityormahamritam gamaya",
+      "source_text_devanagari": "तमसोमा ज्योतिर्गमय मृत्योर्महामृतम् गमय",
+      "english_context": "Brihadaranyaka Upanishad 1.3.28 — famous prayer for liberation.",
+      "compound_iast": "tamasomajyotirgamaya",
+      "decision_prompt": "How does this compound correctly parse in the prayer 'lead us from darkness to light'?",
+      "candidate_options": [
+        "tamaso + ma + jyotir + gamaya (from darkness + not + light + lead us)",
+        "tamas + omajyotir + gamaya (darkness + unclear + lead us)",
+        "tamaso + majyoti + rgamaya (unclear split)",
+        "tam + asoma + jyotir + gamaya (unclear split)"
+      ],
+      "correct_answer": "tamaso + ma + jyotir + gamaya (from darkness + not + light + lead us)",
+      "correct_index": 0,
+      "partial_credit_indices": [],
+      "explanation": "Tamasah (from darkness, ablative) + ma (not/don't, negative) — meaning 'do not keep in darkness' + jyotis (light) with visarga sandhi + gamaya (lead). The prayer: 'from darkness lead me to light'.",
+      "domain": "philosophy"
+    },
+    {
+      "id": "t2_007",
+      "source_text_iast": "nabhashcharanti bhutani nabhashcharanti pannagah",
+      "source_text_devanagari": "नभश्चरन्ति भूतानि नभश्चरन्ति पन्नगाः",
+      "english_context": "Verse from Ramayana describing creatures that move through the sky.",
+      "compound_iast": "nabhashcharanti",
+      "decision_prompt": "How does 'nabhashcharanti' correctly split in this verse about sky-moving beings?",
+      "candidate_options": [
+        "nabhas + charanti (sky/atmosphere + they move/wander)",
+        "nabhash + charanti (unclear root + they move)",
+        "na + bhashcharanti (not + they speak-and-move)",
+        "nabha + shcharanti (unclear split)"
+      ],
+      "correct_answer": "nabhas + charanti (sky/atmosphere + they move/wander)",
+      "correct_index": 0,
+      "partial_credit_indices": [],
+      "explanation": "Nabhas (sky) undergoes visarga sandhi before ch, converting s+ch to shch. Charanti = they wander/move. Nabhash-charanti = 'they wander in the sky'. Pannagah = serpents (nagas), which in Hindu cosmology can fly.",
+      "domain": "narrative"
+    },
+    {
+      "id": "t2_008",
+      "source_text_iast": "brahmavidapnoti param",
+      "source_text_devanagari": "ब्रह्मविदाप्नोति परम्",
+      "english_context": "Taittiriya Upanishad 2.1.1 — on the knower of Brahman.",
+      "compound_iast": "brahmavidapnoti",
+      "decision_prompt": "How does 'brahmavidapnoti' correctly split in this Upanishadic statement?",
+      "candidate_options": [
+        "brahma + vid + apnoti (Brahman + knower + attains)",
+        "brahm + avid + apnoti (unclear root + ignorance + attains)",
+        "brahmavid + aapnoti — same as option A but different sandhi analysis",
+        "brahma + vida + pnoti (unclear split)"
+      ],
+      "correct_answer": "brahma + vid + apnoti (Brahman + knower + attains)",
+      "correct_index": 0,
+      "partial_credit_indices": [2],
+      "explanation": "Brahma-vid (knower of Brahman) is a tatpurusha compound. Apnoti = attains. The sentence means 'the knower of Brahman attains the highest'. Options A and C are essentially the same analysis.",
+      "domain": "philosophy"
+    }
+  ]
+}
