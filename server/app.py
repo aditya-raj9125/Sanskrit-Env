@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from server.environment import SanskritEnvironment
-from server.model_agent import get_model_catalog, run_model_episode
+from server.model_agent import get_available_model_catalog, get_model_catalog, run_model_episode
 from models import ManuscriptAction, ManuscriptObservation
 
 
@@ -58,6 +58,7 @@ HF_TEMPERATURE = _env_float("HF_TEMPERATURE", 0.0)
 HF_MAX_TOKENS = _env_int("HF_MAX_TOKENS", 512)
 HF_RETRY_WAIT = _env_int("RETRY_WAIT", 5)
 HF_REQUEST_TIMEOUT = _env_int("HF_REQUEST_TIMEOUT", 90)
+HF_MODEL_PROBE_TTL = _env_int("HF_MODEL_PROBE_TTL", 300)
 
 
 class ModelEpisodeRequest(BaseModel):
@@ -88,16 +89,38 @@ async def check_session():
     return {"active_sessions": list(env_instance._sessions.keys())}
 
 
+def _resolve_ui_models() -> dict:
+    if not HF_TOKEN:
+        models = get_model_catalog(HF_UI_MODELS)
+        return {
+            "models": models,
+            "unavailable_models": [],
+            "availability_checked": False,
+            "catalog_size": len(models),
+        }
+
+    return get_available_model_catalog(
+        configured_models=HF_UI_MODELS,
+        hf_token=HF_TOKEN,
+        router_url=HF_ROUTER_URL,
+        request_timeout=HF_REQUEST_TIMEOUT,
+        cache_ttl=HF_MODEL_PROBE_TTL,
+    )
+
+
 @app.get("/model/options")
 async def model_options():
-    models = get_model_catalog(HF_UI_MODELS)
+    catalog = _resolve_ui_models()
     return {
-        "models": models,
+        "models": catalog.get("models", []),
+        "unavailable_models": catalog.get("unavailable_models", []),
+        "availability_checked": bool(catalog.get("availability_checked")),
+        "catalog_size": catalog.get("catalog_size", 0),
         "token_configured": bool(HF_TOKEN),
         "token_source": HF_TOKEN_SOURCE,
         "token_env_keys": list(HF_TOKEN_ENV_KEYS),
         "router_url": HF_ROUTER_URL,
-        "note": "HF free-tier availability can change by provider load or policy.",
+        "note": "Only models currently available for your token/provider are shown. Availability can change by load or policy.",
     }
 
 
@@ -110,10 +133,20 @@ async def model_run(payload: ModelEpisodeRequest):
             detail=f"HF token is not configured on the server. Set one of: {expected}.",
         )
 
-    models = get_model_catalog(HF_UI_MODELS)
+    catalog = _resolve_ui_models()
+    models = catalog.get("models", [])
     allowed = {model["id"] for model in models}
     if payload.model_id not in allowed:
-        raise HTTPException(status_code=400, detail="Selected model is not in the configured HF UI model list.")
+        reason = None
+        for item in catalog.get("unavailable_models", []):
+            if item.get("id") == payload.model_id:
+                reason = item.get("reason")
+                break
+
+        detail = "Selected model is not currently available for this HF token/provider setup."
+        if reason:
+            detail = f"{detail} Reason: {reason}"
+        raise HTTPException(status_code=400, detail=detail)
 
     try:
         return run_model_episode(

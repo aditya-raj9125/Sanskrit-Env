@@ -1131,7 +1131,17 @@
         modelOptions = Array.isArray(data.models) ? data.models : [];
 
         if (!modelOptions.length) {
-          modelHint.textContent = "No HF models configured by the server.";
+          if (data.availability_checked) {
+            const hidden = Array.isArray(data.unavailable_models) ? data.unavailable_models.length : 0;
+            const total = typeof data.catalog_size === "number" ? data.catalog_size : hidden;
+            if (hidden > 0) {
+              modelHint.textContent = `No HF models are available right now for this token/provider setup (${hidden}/${total} blocked or unsupported).`;
+            } else {
+              modelHint.textContent = "No HF models are currently available for this server.";
+            }
+          } else {
+            modelHint.textContent = "No HF models configured by the server.";
+          }
         } else if (!data.token_configured) {
           const keys = Array.isArray(data.token_env_keys) && data.token_env_keys.length
             ? data.token_env_keys.join(", ")
@@ -1139,7 +1149,12 @@
           modelHint.textContent = `No HF token detected on server. Add a Space Secret/env var (${keys}) and restart the Space.`;
         } else {
           const source = data.token_source ? ` (${data.token_source})` : "";
-          modelHint.textContent = `Model mode uses server-side HF Router token${source} and computes episode scores automatically.`;
+          const hidden = Array.isArray(data.unavailable_models) ? data.unavailable_models.length : 0;
+          if (data.availability_checked && hidden > 0) {
+            modelHint.textContent = `Model mode uses server-side HF Router token${source}. Showing ${modelOptions.length} available model(s); ${hidden} blocked/unsupported model(s) hidden.`;
+          } else {
+            modelHint.textContent = `Model mode uses server-side HF Router token${source} and computes episode scores automatically.`;
+          }
         }
       } catch (err) {
         modelOptions = [];

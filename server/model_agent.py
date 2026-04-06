@@ -1,4 +1,5 @@
 import json
+import hashlib
 import time
 import urllib.error
 import urllib.request
@@ -33,6 +34,8 @@ DEFAULT_FREE_MODELS: List[Dict[str, str]] = [
     {"id": "HuggingFaceH4/zephyr-7b-beta", "label": "Zephyr 7B Beta"},
 ]
 
+_MODEL_CATALOG_CACHE: Dict[str, Dict[str, Any]] = {}
+
 
 def get_model_catalog(configured_models: str = "") -> List[Dict[str, str]]:
     """
@@ -44,6 +47,140 @@ def get_model_catalog(configured_models: str = "") -> List[Dict[str, str]]:
         return [{"id": model_id, "label": model_id} for model_id in ids]
 
     return [dict(item) for item in DEFAULT_FREE_MODELS]
+
+
+def _parse_router_error_text(raw: str) -> str:
+    text = (raw or "").strip()
+    if not text:
+        return "unknown provider error"
+
+    try:
+        payload = json.loads(text)
+        if isinstance(payload, dict):
+            err = payload.get("error")
+            if isinstance(err, dict):
+                msg = err.get("message")
+                if isinstance(msg, str) and msg.strip():
+                    return msg.strip()
+            if isinstance(err, str) and err.strip():
+                return err.strip()
+    except json.JSONDecodeError:
+        pass
+
+    lowered = text.lower()
+    title_start = lowered.find("<title>")
+    if title_start != -1:
+        title_end = lowered.find("</title>", title_start)
+        if title_end != -1:
+            title = text[title_start + len("<title>"):title_end].strip()
+            if title:
+                return title
+
+    return " ".join(text.split())[:220]
+
+
+def _probe_model_availability(
+    model_id: str,
+    hf_token: str,
+    router_url: str,
+    request_timeout: int,
+) -> tuple[bool, str]:
+    payload = {
+        "model": model_id,
+        "messages": [
+            {"role": "system", "content": "Reply with OK only."},
+            {"role": "user", "content": "OK"},
+        ],
+        "temperature": 0,
+        "max_tokens": 4,
+    }
+
+    body = json.dumps(payload).encode("utf-8")
+    headers = {
+        "Authorization": f"Bearer {hf_token}",
+        "Content-Type": "application/json",
+    }
+    request = urllib.request.Request(router_url, data=body, headers=headers, method="POST")
+
+    try:
+        with urllib.request.urlopen(request, timeout=request_timeout) as response:
+            if 200 <= response.status < 300:
+                return True, "ok"
+            return False, f"HTTP {response.status}"
+    except urllib.error.HTTPError as exc:
+        err_text = exc.read().decode("utf-8", errors="ignore")
+        parsed = _parse_router_error_text(err_text)
+        return False, f"{exc.code}: {parsed}"
+    except urllib.error.URLError as exc:
+        return False, f"network: {exc.reason}"
+    except Exception as exc:
+        return False, f"error: {exc}"
+
+
+def get_available_model_catalog(
+    configured_models: str,
+    hf_token: str,
+    router_url: str,
+    request_timeout: int,
+    cache_ttl: int = 300,
+) -> Dict[str, Any]:
+    models = get_model_catalog(configured_models)
+    if not models:
+        return {
+            "models": [],
+            "unavailable_models": [],
+            "availability_checked": False,
+            "catalog_size": 0,
+        }
+
+    if not hf_token:
+        return {
+            "models": models,
+            "unavailable_models": [],
+            "availability_checked": False,
+            "catalog_size": len(models),
+        }
+
+    safe_timeout = max(6, min(request_timeout, 30))
+    ttl = max(30, cache_ttl)
+    token_digest = hashlib.sha256(hf_token.encode("utf-8")).hexdigest()[:16]
+    cache_key = f"{token_digest}|{router_url}|{configured_models.strip()}"
+
+    now = time.time()
+    cached = _MODEL_CATALOG_CACHE.get(cache_key)
+    if cached and now - cached.get("ts", 0) < ttl:
+        return cached["data"]
+
+    available: List[Dict[str, str]] = []
+    unavailable: List[Dict[str, str]] = []
+
+    for model in models:
+        ok, reason = _probe_model_availability(
+            model_id=model["id"],
+            hf_token=hf_token,
+            router_url=router_url,
+            request_timeout=safe_timeout,
+        )
+        if ok:
+            available.append(model)
+        else:
+            unavailable.append(
+                {
+                    "id": model["id"],
+                    "label": model["label"],
+                    "reason": reason,
+                }
+            )
+
+    data = {
+        "models": available,
+        "unavailable_models": unavailable,
+        "availability_checked": True,
+        "catalog_size": len(models),
+    }
+
+    _MODEL_CATALOG_CACHE[cache_key] = {"ts": now, "data": data}
+    return data
 
 
 def build_user_prompt(obs: Any, rolling_memory: str) -> str:
@@ -190,7 +327,8 @@ def call_hf_router(
             if exc.code in (429, 500, 502, 503, 504):
                 time.sleep(retry_wait * (2 ** attempt))
                 continue
-            raise RuntimeError(f"HF router error {exc.code}: {err_text[:350]}")
+            parsed = _parse_router_error_text(err_text)
+            raise RuntimeError(f"HF router error {exc.code}: {parsed}")
         except urllib.error.URLError as exc:
             time.sleep(retry_wait * (2 ** attempt))
             if attempt == 3:
