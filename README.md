@@ -7,6 +7,7 @@ sdk: docker
 app_port: 7860
 license: apache-2.0
 short_description: RL environment for Sanskrit manuscript interpretation
+huggingFace_url: https://huggingface.co/spaces/Adityahars/Sanskrit-env
 ---
 
 # SanskritEnv
@@ -72,7 +73,7 @@ correct linguistic interpretation from four deterministically-graded options.
 Agent ──[ManuscriptAction]──► SanskritEnv ──[ManuscriptObservation + reward]──► Agent
 ```
 
-<img width="600" alt="Sanskrit_env (2)" src="https://github.com/user-attachments/assets/d113e30a-ff15-408f-b580-1449677a9bdc" />
+<img width="600"  alt="image" src="https://github.com/user-attachments/assets/21fe0272-5a98-48d3-af1b-4dd415b299dc" />
 
 
 
@@ -131,24 +132,13 @@ Current recorded run from `baseline_results.json`:
 
 | Provider | Model | Episodes | Seed | Glossary | Sandhi | Samasa | Coherence | Overall |
 |----------|-------|----------|------|----------|--------|--------|-----------|---------|
-| Cloudflare Workers AI | `@cf/meta/llama-3.1-8b-instruct` | `20` | `42` | `1.000` | `0.600` | `0.940` | `0.490` | `0.758` |
+| Cloudflare Workers AI | @cf/meta/llama-3.1-8b-instruct | 5 | 42 | 1.000 | 1.000 | 1.000 | 0.280 | 0.820 |
+| Cloudflare Workers AI | @cf/meta/llama-3.1-70b-instruct | 5 | 42 | 1.000 | 1.000 | 1.000 | 0.700 | 0.925 |
+| Cloudflare Workers AI | @cf/meta/llama-3.2-3b-instruct | 5 | 42 | 1.000 | 0.800 | 0.480 | 0.140 | 0.605 |
+| Cloudflare Workers AI | @cf/meta/llama-3.3-70b-instruct-fp8-fast | 5 | 42 | 1.000 | 1.000 | 1.000 | 0.700 | 0.925 |
+| Cloudflare Workers AI | @cf/meta/llama-3.3-70b-instruct-fp8-fast | 20 | 42 | 1.000 | 1.000 | 0.970 | 0.700 | 0.917 |
 
 *Goal: extend this matrix to five Cloudflare model rows (one run per model). Results are saved to `baseline_results.json`.*
-
----
-
-## Action space
-
-```python
-ManuscriptAction(
-    selected_option: str,   # Must match one entry in candidate_options EXACTLY
-    confidence: float = 0.5,   # Agent self-reported confidence — logged, not graded
-    reasoning: str = "",        # Agent explanation — logged, not graded
-)
-```
-
-**Critical:** `selected_option` must be copied verbatim from `candidate_options`.
-Any string not in the list returns `reward=0.0` and terminates the episode.
 
 ---
 
@@ -220,8 +210,7 @@ Two runs with the same seed will always produce identical scores.
 
 - Python 3.11+
 - Docker (for containerized deployment)
-- Groq API key (free): [console.groq.com](https://console.groq.com)
-
+- LLM providers' API key.
 ### Local development
 
 ```bash
