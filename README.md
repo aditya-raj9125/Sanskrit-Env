@@ -138,8 +138,6 @@ Current recorded run from `baseline_results.json`:
 | Cloudflare Workers AI | @cf/meta/llama-3.3-70b-instruct-fp8-fast | 5 | 42 | 1.000 | 1.000 | 1.000 | 0.700 | 0.925 |
 | Cloudflare Workers AI | @cf/meta/llama-3.3-70b-instruct-fp8-fast | 20 | 42 | 1.000 | 1.000 | 0.970 | 0.700 | 0.917 |
 
-*Goal: extend this matrix to five Cloudflare model rows (one run per model). Results are saved to `baseline_results.json`.*
-
 ---
 
 ## Reward function
