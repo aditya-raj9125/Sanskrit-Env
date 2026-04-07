@@ -317,7 +317,7 @@ Please open an issue before starting a large contribution.
 
 ## Citation
 
-If you use SanskritEnv in your research:
+If you use SanskritEnv in your research:-
 
 ```bibtex
 @misc{sanskritenv2025,
