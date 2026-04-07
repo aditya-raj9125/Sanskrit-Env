@@ -26,6 +26,7 @@ ENV/
 *.swp
 *.swo
 workflows/
+README.md
 
 # OS
 .DS_Store
