@@ -38,7 +38,7 @@ SanskritEnv is the first RL environment built to train agents on exactly these t
 
 ---
 
-## How this environmen solves the problem
+## How this Environment Solves the Problem
 
 Projects like eGangotri have already rescued
 and scanned more than 60,000 rare texts and 1.4 crore pages. The problem:
@@ -109,20 +109,31 @@ annotated by the project authors. No proprietary data is used.
 
 ---
 
-## Baseline scores
+## Dataset statistics
 
-Measured with `llama-3.3-70b-versatile` (Groq), ReAct + Memory architecture,
-`temperature=0.0`, 5 episodes per task, seed=42.
+| Task | Episodes | Domains covered | Difficulty |
+|------|----------|-----------------|------------|
+| Glossary Anchoring | 1500 | Ayurveda, Astronomy, Philosophy | Easy |
+| Sandhi Resolution | 1500 | Philosophy, Ayurveda, Narrative | Medium |
+| Samāsa Classification | 1500 | Philosophy, Narrative, Ayurveda, Astronomy | Medium |
+| Referential Coherence | 1500 | Narrative, Philosophy | Hard |
 
-| Task | Score | Std dev |
-|------|-------|---------|
-| Task 1 — Glossary Anchoring (Easy) | `1.000` | `±0.000` |
-| Task 2 — Sandhi Resolution (Medium) | `1.000` | `±0.000` |
-| Task 3 — Samāsa Classification (Medium) | `—` | `—` |
-| Task 4 — Referential Coherence (Hard) | `0.840` | `±0.102` |
+---
 
-*Run `python baseline.py` to reproduce. Results are saved to `baseline_results.json`.*
-*Task 3 (Samāsa) baseline pending — run `python baseline.py --task samasa_classification` to generate.*
+## Baseline benchmark matrix
+
+`baseline.py` now uses a single model selector env var: `BASELINE_MODEL`.
+To compare multiple Cloudflare models, update `BASELINE_MODEL` and rerun baseline once per model.
+If Cloudflare is rate-limited, the script automatically falls back to HF Router model
+`Qwen/Qwen2.5-7B-Instruct` (from the curated free-tier list in `server/model_agent.py`).
+
+Current recorded run from `baseline_results.json`:
+
+| Provider | Model | Episodes | Seed | Glossary | Sandhi | Samasa | Coherence | Overall |
+|----------|-------|----------|------|----------|--------|--------|-----------|---------|
+| Cloudflare Workers AI | `@cf/meta/llama-3.1-8b-instruct` | `20` | `42` | `1.000` | `0.600` | `0.940` | `0.490` | `0.758` |
+
+*Goal: extend this matrix to five Cloudflare model rows (one run per model). Results are saved to `baseline_results.json`.*
 
 ---
 
@@ -138,41 +149,6 @@ ManuscriptAction(
 
 **Critical:** `selected_option` must be copied verbatim from `candidate_options`.
 Any string not in the list returns `reward=0.0` and terminates the episode.
-
----
-
-## Observation space
-
-```python
-ManuscriptObservation(
-    # Always present
-    task_id: str,                    # "glossary_anchoring" | "sandhi_resolution" | "samasa_classification" | "referential_coherence"
-    episode_id: str,                 # Unique episode identifier
-    source_text_iast: str,           # Sanskrit in IAST transliteration
-    source_text_devanagari: str,     # Sanskrit in Devanagari script
-    english_context: str,            # Source text and domain description
-    domain: str,                     # "ayurveda" | "astronomy" | "philosophy" | "narrative"
-    decision_prompt: str,            # The question the agent must answer
-    candidate_options: List[str],    # Exactly 4 options — select one verbatim
-    step_reward: float,              # Reward earned on the previous step (0.0 at step 1)
-    cumulative_score: float,         # Running episode score (0.0–1.0)
-    feedback_message: str,           # Plain-English explanation of previous reward
-    done: bool,                      # True when episode is complete
-    reward: Optional[float],         # Final episode score when done=True, else None
-
-   # Task 1 only
-    target_term_iast: Optional[str],           # The term to interpret
-    active_glossary: Optional[Dict[str, str]], # Domain term reference
-
-    # Task 2 and Task 3 (Samāsa)
-    compound_iast: Optional[str],              # The compound word to split or classify
-
-    # Task 4 only
-    verses_so_far: Optional[List[Dict]],       # All verses seen: [{verse_num, iast, english}]
-    current_verse_num: Optional[int],          # Current verse being processed
-    consistency_history: Optional[List[Dict]], # Prior checkpoint answers: [{question, answer}]
-)
-```
 
 ---
 
@@ -292,85 +268,6 @@ python baseline.py --task referential_coherence
 
 ---
 
-## Usage
-
-### Minimal example
-
-```python
-from client import SanskritEnv
-from models import ManuscriptAction
-
-with SanskritEnv(base_url="https://Aditya_Raj-sanskrit-env.hf.space").sync() as env:
-
-    # Task 1 — single step
-    result = env.reset(task_id="glossary_anchoring")
-    obs = result.observation
-
-    print(obs.source_text_iast)     # Sanskrit passage
-    print(obs.decision_prompt)      # Question
-    print(obs.candidate_options)    # 4 options
-
-    result = env.step(ManuscriptAction(
-        selected_option=obs.candidate_options[0],
-        reasoning="This matches the Ayurvedic domain context."
-    ))
-    print(f"Score: {result.reward}")
-```
-### Task 3 — Samāsa Classification
-
-```python
-from client import SanskritEnv
-from models import ManuscriptAction
-
-with SanskritEnv(base_url="https://Aditya_Raj-sanskrit-env.hf.space").sync() as env:
-    result = env.reset(task_id="samasa_classification")
-    obs = result.observation
-
-    print(obs.source_text_iast)   # Full passage
-    print(obs.compound_iast)      # The compound to classify e.g. "raja-putrah"
-    print(obs.decision_prompt)    # "What type of samasa is 'raja-putrah'?"
-    print(obs.candidate_options)  # 4 compound types with explanations
-
-    result = env.step(ManuscriptAction(
-        selected_option=obs.candidate_options[0],
-        reasoning="First member qualifies second via genitive — tatpurusha."
-    ))
-    print(f"Score: {result.reward}")
-```
-
-### Task 4 — Referential Coherence (multi-step with memory)
-
-```python
-from client import SanskritEnv
-from models import ManuscriptAction
-
-rolling_memory = ""
-
-with SanskritEnv(base_url="https://Aditya_Raj-sanskrit-env.hf.space").sync() as env:
-    result = env.reset(task_id="referential_coherence")
-    obs = result.observation
-
-    while not obs.done:
-        # Show verses and question
-        if obs.verses_so_far:
-            for v in obs.verses_so_far:
-                print(f"  Verse {v['verse_num']}: {v['english']}")
-
-        print(f"\nQuestion: {obs.decision_prompt}")
-
-        # Agent picks an option (replace with your model)
-        selected = obs.candidate_options[0]
-
-        # Update rolling memory
-        rolling_memory += f"\n• {obs.decision_prompt} → {selected}"
-
-        result = env.step(ManuscriptAction(selected_option=selected))
-        obs = result.observation
-        print(f"  Reward this step: {obs.step_reward:.2f}")
-
-    print(f"\nFinal episode score: {obs.reward:.4f}")
-```
-
 ### Reproducible evaluation
 
 ```python
@@ -415,15 +312,6 @@ agent suffers on multi-verse passages.
 
 ---
 
-## Evaluation phases
-
-This environment participates in the Meta × HuggingFace OpenEnv hackathon:
-
-- **Phase 1 (Automated):** `openenv validate` passes, Docker builds, baseline reproduces
-- **Phase 2 (Agentic):** Standard Open LLM agent (Nemotron 3 Super) is run against all tasks
-- **Phase 3 (Human):** Meta and HuggingFace engineers review real-world utility and grader integrity
-
----
 
 ## Contributing
 
