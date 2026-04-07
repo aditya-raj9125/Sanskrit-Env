@@ -23,10 +23,24 @@ short_description: RL environment for Sanskrit manuscript interpretation
 
 ---
 
-## Why this environment exists
+## Real-World Impact
 
-India's **Gyan Bharatam Mission** (Union Budget 2025–26) is digitizing over
-**1 crore Sanskrit manuscripts**. Projects like eGangotri have already rescued
+India possesses an estimated **1 crore Sanskrit manuscripts** written in over 80 scripts and 60 languages — the largest manuscript collection of any civilisation on Earth. The **Union Budget 2025-26** allocated ₹60 crore to digitize over **1 crore of these manuscripts** under the **Gyan Bharatam Mission**. As of 2025, metadata for 52 lakh manuscripts has been recorded — but only 1.3 lakh have been uploaded online. Digitization is accelerating, translation is not.
+
+The reason is a collapse in human expertise. Trained Sanskrit scholars capable of reading classical manuscripts are retiring faster than new scholars can replace them. The Government's own National Mission for Manuscripts states directly: *"Scholars who can study and use manuscripts are fast disappearing and a new generation of scholars is not able to rise to the challenge."* A nationwide survey launched in 2026 confirmed the crisis is active and growing.
+
+The three exact linguistic problems that block automated translation of these manuscripts are:
+- A single Sanskrit term can carry 4-6 domain-specific meanings with no contextual signal (lexical ambiguity).
+- Compound words have multiple valid phonological splits with different meanings (sandhi and samasa ambiguity).
+- Pronouns and implicit subjects span multiple verses with no explicit antecedent markers (referential ambiguity).
+
+SanskritEnv is the first RL environment built to train agents on exactly these three problems — using real passages from Ayurvedic, astronomical, philosophical, and narrative manuscripts that are currently sitting in India's national repositories.
+
+---
+
+## How this environmen solves the problem
+
+Projects like eGangotri have already rescued
 and scanned more than 60,000 rare texts and 1.4 crore pages. The problem:
 digitization has outpaced translation by orders of magnitude. The bottleneck
 is not scanning technology — it is the shortage of scholars who can read
@@ -35,8 +49,8 @@ classical Sanskrit across its four major difficulty layers:
 | Layer | Problem | What blocks automation |
 |-------|---------|----------------------|
 | Lexical | A single term (e.g. *agni*) has 4–6 domain-specific meanings | No contextual disambiguation |
-| Morphological | Compound words (*samāsa*) must be classified before they can be parsed | Requires grammatical meta-knowledge |
 | Phonological | Compound words (*sandhi*) have multiple valid splits | Requires grammatical + contextual reasoning |
+| Morphological | Compound words (samāsa) must be classified before they can be parsed | Requires grammatical meta-knowledge |
 | Discourse | Pronouns and implicit subjects span multiple verses | Requires cross-sentence coreference tracking |
 
 SanskritEnv provides a structured benchmark where AI agents must solve exactly
@@ -44,19 +58,7 @@ these four problems, with fully deterministic graders and dense reward signals.
 No existing OpenEnv environment addresses Sanskrit, ancient linguistics, or
 cultural heritage preservation.
 
-### The scale of the problem
-
-India's **National Mission for Manuscripts** has catalogued over **5.2 million
-manuscripts** across 51 cataloguing centres; fewer than 1% have been translated
-into any modern language. The ratio of trained Sanskrit scholars capable of
-reading classical manuscripts to the volume of digitized texts is estimated at
-**1:10,000 and widening** every year as digitization accelerates. The four
-linguistic layers modeled in SanskritEnv — lexical, morphological, phonological,
-and discourse — are the same four layers cited by **Murugesh et al. (2019)**
-*"A Survey of Sanskrit NLP"* as the primary obstacles to automated translation
-pipeline construction. SanskritEnv is the **first OpenEnv environment targeting
-ancient-language manuscript interpretation**, filling a gap that is both
-culturally significant and computationally underexplored.
+India's National Mission for Manuscripts has catalogued over 5.2 million manuscripts across 51 cataloguing centres; fewer than 1% have been translated into any modern language. The ratio of trained Sanskrit scholars capable of reading classical manuscripts to the volume of digitized texts is estimated at 1:10,000 and widening every year as digitization accelerates. The four linguistic layers modeled in SanskritEnv — lexical, morphological, phonological, and discourse — are the same four layers cited by Murugesh et al. (2019) "A Survey of Sanskrit NLP" as the primary obstacles to automated translation pipeline construction. SanskritEnv is the first OpenEnv environment targeting ancient-language manuscript interpretation, filling a gap that is both culturally significant and computationally underexplored.
 
 ---
 
@@ -70,6 +72,10 @@ correct linguistic interpretation from four deterministically-graded options.
 Agent ──[ManuscriptAction]──► SanskritEnv ──[ManuscriptObservation + reward]──► Agent
 ```
 
+<img width="600" alt="Sanskrit_env (2)" src="https://github.com/user-attachments/assets/d113e30a-ff15-408f-b580-1449677a9bdc" />
+
+
+
 Four tasks, escalating difficulty:
 
 | Task | ID | Difficulty | Steps/episode | Core challenge |
@@ -81,31 +87,42 @@ Four tasks, escalating difficulty:
 
 ---
 
-## Dataset statistics
+## Data sources
 
-| Task | Episodes | Domains covered | Difficulty |
-|------|----------|-----------------|------------|
-| Glossary Anchoring | 1500 | Ayurveda, Astronomy, Philosophy | Easy |
-| Sandhi Resolution | 1500 | Philosophy, Ayurveda, Narrative | Medium |
-| Samāsa Classification | 1500 | Philosophy, Narrative, Ayurveda, Astronomy | Medium |
-| Referential Coherence | 1500 | Narrative, Philosophy | Hard |
+All ground truth data is curated from public domain Sanskrit texts,
+annotated by the project authors. No proprietary data is used.
+
+| Text | Domain | Task | Links |
+|------|--------|------|-------|
+| Sushruta Samhita | Ayurveda | Task 1 | http://niimh.res.in/ebooks/esushruta/?mod=read |
+| Bhagavad Gita | Vedanta philosophy | Task 1, 2, 4 | https://sanskritdocuments.org/sanskrit/bhagavadgita/ |
+| Charaka Samhita | Ayurveda | Task 1, 3 | https://niimh.nic.in/ebooks/ecaraka/index.php | 
+| Ashtanga Hridayam | Ayurveda | Task 1, 3 | https://archive.org/details/Ashtanga.Hridaya.of.Vagbhata/page/n463/mode/2up |
+| Aryabhatiya | Astronomy | Task 1, 3 | https://archive.org/details/Aryabhatiya1976/Aryabhatiya%20v1%201976/ |
+| Arthashastra | Political philosophy | Task 1, 3, 4 | https://archive.org/details/in.ernet.dli.2015.485591/page/131/mode/2up |
+| Mundaka Upanishad | Vedanta philosophy | Task 2 | https://sanskritdocuments.org/doc_upanishhat/mundaka.html |
+| Brihadaranyaka Upanishad | Vedanta philosophy | Task 2 | https://sanskritdocuments.org/doc_upanishhat/brinew-proofed.html |
+| Ramayana (Ayodhya Kanda) | Narrative | Task 2, 3, 4 | https://archive.org/details/ValmikiRamayana-AyodhyaKandaWithGovindarajaCommentary/page/%E0%A5%A7%E0%A5%AC%E0%A5%AC/mode/2up |
+| Vishnu Sahasranama | Philosophy | Task 3 | https://www.swami-krishnananda.org/vishnu/vishnu_4.html |
+| Meghaduta (Kalidasa) | Narrative | Task 3 |https://sanskritdocuments.org/doc_z_misc_major_works/meghanew.html |
+| Mahabharata (Vana Parva) | Narrative | Task 3, 4 | https://sacred-texts.com/hin/m03/index.htm |
 
 ---
 
 ## Baseline scores
 
-Measured with `@cf/meta/llama-3.1-8b-instruct` (Cloudflare Workers AI),
-ReAct + Memory architecture, `CF_TEMPERATURE=0.0`, `EPISODES_PER_TASK=5`, `RANDOM_SEED=42`.
-Values below are from the generated `baseline_results.json`.
+Measured with `llama-3.3-70b-versatile` (Groq), ReAct + Memory architecture,
+`temperature=0.0`, 5 episodes per task, seed=42.
 
-| Task | Score | Std dev | Notes |
-|------|-------|---------|-------|
-| Task 1 — Glossary Anchoring (Easy) | `1.000` | `±0.000` | Generated |
-| Task 2 — Sandhi Resolution (Medium) | `0.800` | `±0.400` | Generated |
-| Task 3 — Samāsa Classification (Medium) | `1.000` | `±0.000` | Generated |
-| Task 4 — Referential Coherence (Hard) | `0.280` | `±0.3429` | Generated |
+| Task | Score | Std dev |
+|------|-------|---------|
+| Task 1 — Glossary Anchoring (Easy) | `1.000` | `±0.000` |
+| Task 2 — Sandhi Resolution (Medium) | `1.000` | `±0.000` |
+| Task 3 — Samāsa Classification (Medium) | `—` | `—` |
+| Task 4 — Referential Coherence (Hard) | `0.840` | `±0.102` |
 
 *Run `python baseline.py` to reproduce. Results are saved to `baseline_results.json`.*
+*Task 3 (Samāsa) baseline pending — run `python baseline.py --task samasa_classification` to generate.*
 
 ---
 
@@ -143,7 +160,7 @@ ManuscriptObservation(
     done: bool,                      # True when episode is complete
     reward: Optional[float],         # Final episode score when done=True, else None
 
-    # Task 1 only
+   # Task 1 only
     target_term_iast: Optional[str],           # The term to interpret
     active_glossary: Optional[Dict[str, str]], # Domain term reference
 
@@ -227,8 +244,7 @@ Two runs with the same seed will always produce identical scores.
 
 - Python 3.11+
 - Docker (for containerized deployment)
-- Cloudflare Workers AI API token
-- Cloudflare account ID
+- Groq API key (free): [console.groq.com](https://console.groq.com)
 
 ### Local development
 
@@ -264,40 +280,19 @@ curl http://localhost:7860/health
 ### Run baseline
 
 ```bash
-# Create .env from template
-copy .env.example .env   # Windows
-# cp .env.example .env   # macOS/Linux
-
-# Edit .env and set at least:
-# CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
-# CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
-# SANSKRIT_ENV_URL=http://localhost:7860
+export GROQ_API_KEY=your_key_here
+export SANSKRIT_ENV_URL=http://localhost:7860
 
 # All tasks
 python baseline.py
 
-# Optional controls are env-driven (no CLI flags):
-# BASELINE_TASK=samasa_classification
-# BASELINE_MODEL=@cf/meta/llama-3.1-8b-instruct
-# BASELINE_NO_AUTO_FALLBACK=1
-# EPISODES_PER_TASK=5
-# RANDOM_SEED=42
+# Single task
+python baseline.py --task referential_coherence
 ```
 
 ---
 
 ## Usage
-
-### HF Space UI modes
-
-The web UI now supports two modes:
-
-- Human mode: user manually answers each question.
-- Model mode: user selects an HF model from the dropdown and the server auto-solves the full episode, then shows score and per-model performance stats.
-
-If model mode shows a token warning on HF Space, open Space Settings -> Variables and secrets and set one of these secrets/env vars: `HF_TOKEN`, `HUGGINGFACEHUB_API_TOKEN`, `HUGGINGFACE_API_TOKEN`, `HF_API_TOKEN`, `HF_API_KEY`, or `HUGGINGFACE_TOKEN`, then restart the Space.
-
-Important note: the dropdown is restricted to HF models intended for free-tier routing, but real-time availability can still vary with provider load, throttling, or policy updates.
 
 ### Minimal example
 
@@ -321,7 +316,6 @@ with SanskritEnv(base_url="https://Aditya_Raj-sanskrit-env.hf.space").sync() as 
     ))
     print(f"Score: {result.reward}")
 ```
-
 ### Task 3 — Samāsa Classification
 
 ```python
@@ -357,13 +351,17 @@ with SanskritEnv(base_url="https://Aditya_Raj-sanskrit-env.hf.space").sync() as 
     obs = result.observation
 
     while not obs.done:
+        # Show verses and question
         if obs.verses_so_far:
             for v in obs.verses_so_far:
                 print(f"  Verse {v['verse_num']}: {v['english']}")
 
         print(f"\nQuestion: {obs.decision_prompt}")
 
-        selected = obs.candidate_options[0]  # replace with your model
+        # Agent picks an option (replace with your model)
+        selected = obs.candidate_options[0]
+
+        # Update rolling memory
         rolling_memory += f"\n• {obs.decision_prompt} → {selected}"
 
         result = env.step(ManuscriptAction(selected_option=selected))
@@ -377,7 +375,7 @@ with SanskritEnv(base_url="https://Aditya_Raj-sanskrit-env.hf.space").sync() as 
 
 ```python
 # Fixed seed ensures same episode is loaded every run
-result = env.reset(task_id="samasa_classification", seed=42)
+result = env.reset(task_id="sandhi_resolution", seed=42)
 ```
 
 ---
@@ -388,16 +386,16 @@ The included `baseline.py` implements a **ReAct + Memory** loop:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  ReAct + Memory loop (one Workers AI call per step)      │
+│  ReAct + Memory loop (one Groq call per step)           │
 │                                                         │
-│  rolling_memory = ""   ← starts empty each episode     │
+│  rolling_memory = ""   ← starts empty each episode      │
 │                                                         │
 │  while not done:                                        │
 │    1. THINK  — build prompt from obs + rolling_memory   │
-│    2. ACT    — call Cloudflare Workers AI, get answer   │
+│    2. ACT    — call Groq, get raw answer                │
 │    3. MATCH  — match raw answer to candidate_options    │
 │    4. STEP   — env.step(ManuscriptAction(selected))     │
-│    5. UPDATE — append "Q → A" to rolling_memory        │
+│    5. UPDATE — append "Q → A" to rolling_memory         │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -414,28 +412,6 @@ into every prompt. For Task 4 this looks like:
 
 This prevents the referential drift that a naive single-prompt-per-step
 agent suffers on multi-verse passages.
-
----
-
-## Data sources
-
-All ground truth data is curated from public domain Sanskrit texts,
-annotated by the project authors. No proprietary data is used.
-
-| Text | Domain | Task |
-|------|--------|------|
-| Charaka Samhita | Ayurveda | Task 1, 3 |
-| Ashtanga Hridayam | Ayurveda | Task 1, 3 |
-| Sushruta Samhita | Ayurveda | Task 1 |
-| Aryabhatiya | Astronomy | Task 1, 3 |
-| Arthashastra | Political philosophy | Task 1, 3, 4 |
-| Bhagavad Gita | Vedanta philosophy | Task 1, 2, 4 |
-| Mundaka Upanishad | Vedanta philosophy | Task 2 |
-| Brihadaranyaka Upanishad | Vedanta philosophy | Task 2 |
-| Vishnu Sahasranama | Philosophy | Task 3 |
-| Meghaduta (Kalidasa) | Narrative | Task 3 |
-| Ramayana (Ayodhya Kanda) | Narrative | Task 2, 3, 4 |
-| Mahabharata (Vana Parva) | Narrative | Task 3, 4 |
 
 ---
 
@@ -471,8 +447,8 @@ If you use SanskritEnv in your research:
 ```bibtex
 @misc{sanskritenv2025,
   title   = {SanskritEnv: A Reinforcement Learning Environment for Sanskrit Manuscript Interpretation},
-  author  = {YOUR_NAME},
-  year    = {2025},
+  author  = {Meta_Mesh},
+  year    = {2026},
   url     = {https://huggingface.co/spaces/Aditya_Raj/sanskrit-env},
   note    = {OpenEnv-compatible environment for structured linguistic ambiguity resolution}
 }
@@ -494,4 +470,5 @@ Annotations, graders, and environment code are original to this project.
 - [Meta × HuggingFace OpenEnv](https://github.com/meta-pytorch/OpenEnv) — environment framework
 - [Gyan Bharatam Mission](https://indiaculture.gov.in) — the real-world problem this addresses
 - [Monier-Williams Sanskrit Dictionary](https://www.sanskrit-lexicon.uni-koeln.de) — lexical reference
-- [Digital Corpus of Sanskrit](https://www.sanskrit-linguistics.org/dcs/) — annotated corpus reference
+- [Sanskrit Sandhi Split Sighum](https://huggingface.co/datasets/chronbmm/sanskrit-sandhi-split-sighum) — annotated corpus reference
+- [Itihasa](https://huggingface.co/datasets/rahular/itihasa) — annotated corpus reference
