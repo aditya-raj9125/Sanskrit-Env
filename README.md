@@ -73,9 +73,52 @@ correct linguistic interpretation from four deterministically-graded options.
 Agent ──[ManuscriptAction]──► SanskritEnv ──[ManuscriptObservation + reward]──► Agent
 ```
 
-<img width="600" alt="Meta_Mesh" src="https://github.com/user-attachments/assets/90b5dc8b-0b55-46c3-9ee0-5afc856b042a" />
+---
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2d2a5e', 'primaryTextColor': '#c8c4f8', 'primaryBorderColor': '#7f77dd', 'lineColor': '#4a5580', 'secondaryColor': '#0d3530', 'tertiaryColor': '#1e2235'}}}%%
+flowchart TD
+    A([📜 Sanskrit passage input]) -->|Reset — new task| B
 
+    B["🏛️ SanskritEnv
+    Gymnasium-compatible env"]:::env
 
+    B -->|Observation| C
+
+    C["•IAST & Devanāgarī
+• English context
+• Domain info
+• 4 choices"]:::obs
+
+    C -->|Action choice| D
+
+    D["🤖 Agent
+    LLM + rolling memory"]:::agent
+
+    D -->|ManuscriptAction| E
+
+    E["⚙️ ManuscriptAction → env.step()
+    Evaluates choice, computes reward"]:::step
+
+    E -->|done = False| F
+
+    F["🧠 Rolling memory update
+    Q&A appended to history"]:::mem
+
+    F -->|Updated memory| D
+
+    E -->|done = True| G
+
+    G(["🏆 Final episode score
+    0.0 — 1.0"]):::score
+
+    classDef env     fill:#2d2a5e,stroke:#7f77dd,color:#c8c4f8
+    classDef obs     fill:#0d3530,stroke:#1D9E75,color:#9FE1CB
+    classDef agent   fill:#4a1B0C,stroke:#D85A30,color:#F5C4B3
+    classDef step    fill:#042C53,stroke:#378ADD,color:#B5D4F4
+    classDef mem     fill:#042C53,stroke:#378ADD,color:#B5D4F4
+    classDef score   fill:#04342C,stroke:#1D9E75,color:#9FE1CB
+```
+---
 
 Four tasks, escalating difficulty:
 
