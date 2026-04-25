@@ -98,9 +98,6 @@ def main() -> int:
     if args.smoke and args.e2e_pipeline:
         print("error: use either --smoke or --e2e-pipeline, not both.", file=sys.stderr)
         return 1
-    if args.push_to_hub:
-        env["PUSH_TO_HUB"] = "1"
-        env["HUB_MODEL_ID"] = args.hub_model_id
 
     token = os.environ.get("HF_TOKEN")
     if not token:
@@ -138,6 +135,9 @@ def main() -> int:
         env["SMOKE_TEST"] = "1"
     elif args.e2e_pipeline or os.environ.get("E2E_PIPELINE_TEST") == "1":
         env["E2E_PIPELINE_TEST"] = "1"
+    if args.push_to_hub:
+        env["PUSH_TO_HUB"] = "1"
+        env["HUB_MODEL_ID"] = args.hub_model_id
     for key in (
         "EPISODES_PER_TASK",
         "EPISODES_PER_TASK_EASY",
