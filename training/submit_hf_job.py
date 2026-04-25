@@ -108,6 +108,7 @@ def main() -> int:
         env["SMOKE_TEST"] = "1"
     for key in (
         "EPISODES_PER_TASK",
+        "EPISODES_PER_TASK_EASY",
         "TRAIN_EPOCHS",
         "EVAL_EPISODES",
         "EVAL_DURING_TRAIN",

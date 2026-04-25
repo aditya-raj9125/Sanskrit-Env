@@ -17,13 +17,15 @@ export ENV_URL="${ENV_URL%/}"
 
 # SMOKE_TEST=1: short run to verify the job wiring (a few minutes)
 if [[ "${SMOKE_TEST:-0}" == "1" ]]; then
+  export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-2}"
   export EPISODES_PER_TASK="${EPISODES_PER_TASK:-2}"
   export TRAIN_EPOCHS="${TRAIN_EPOCHS:-0.1}"
   export EVAL_EPISODES="${EVAL_EPISODES:-2}"
   export EVAL_DURING_TRAIN="${EVAL_DURING_TRAIN:-0}"
   export NO_BASELINE_EVAL="${NO_BASELINE_EVAL:-1}"
-  echo "[smoke] EPISODES_PER_TASK=$EPISODES_PER_TASK EVAL_EPISODES=$EVAL_EPISODES TRAIN_EPOCHS=$TRAIN_EPOCHS"
+  echo "[smoke] EPISODES_PER_TASK_EASY=$EPISODES_PER_TASK_EASY EPISODES_PER_TASK=$EPISODES_PER_TASK EVAL_EPISODES=$EVAL_EPISODES TRAIN_EPOCHS=$TRAIN_EPOCHS"
 else
+  export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-700}"
   export EPISODES_PER_TASK="${EPISODES_PER_TASK:-1500}"
   export TRAIN_EPOCHS="${TRAIN_EPOCHS:-1.0}"
   export EVAL_EPISODES="${EVAL_EPISODES:-30}"
@@ -41,6 +43,7 @@ MODEL_ID="${MODEL_ID:-Qwen/Qwen2.5-1.5B-Instruct}"
 echo "[info] repo root: $ROOT"
 echo "[info] ENV_URL=$ENV_URL"
 echo "[info] MODEL_ID=$MODEL_ID OUTPUT_DIR=$OUTPUT_DIR"
+echo "[info] EPISODES_PER_TASK_EASY=$EPISODES_PER_TASK_EASY EPISODES_PER_TASK(hard)=$EPISODES_PER_TASK"
 
 echo "[info] pip install (training)..."
 python -m pip install -q -U pip
@@ -62,6 +65,13 @@ fi
 
 mkdir -p "$(dirname "$BASELINE_JSON")" "$(dirname "$POST_JSON")" "$(dirname "$DATASET_CACHE")" "$OUTPUT_DIR"
 
+# At least 1 episode/task so the HF-downloaded model actually runs generate+step (not only load).
+EVAL_RUN_EPISODES="${EVAL_EPISODES:-30}"
+if [[ "$EVAL_RUN_EPISODES" =~ ^[0-9]+$ ]] && [[ "$EVAL_RUN_EPISODES" -lt 1 ]]; then
+  EVAL_RUN_EPISODES=1
+  echo "[info] EVAL_EPISODES<1; using 1 for evaluate.py (model must run >=1 episode per task)"
+fi
+
 BASE_EVAL_ARGS=()
 if [[ "$NO_BASELINE_EVAL" == "1" ]]; then
   echo "[info] skip standalone baseline"
@@ -70,7 +80,7 @@ else
   python "$ROOT/training/evaluate.py" \
     --env-url "$ENV_URL" \
     --base-model "$MODEL_ID" \
-    --episodes-per-task "$EVAL_EPISODES" \
+    --episodes-per-task "$EVAL_RUN_EPISODES" \
     --base-seed 10000 \
     --output "$BASELINE_JSON" \
     --label baseline-untrained
@@ -92,6 +102,7 @@ python "$ROOT/training/train_grpo.py" \
   --env-url "$ENV_URL" \
   --model-id "$MODEL_ID" \
   --episodes-per-task "$EPISODES_PER_TASK" \
+  --episodes-per-task-easy "$EPISODES_PER_TASK_EASY" \
   --base-seed 42 \
   --dataset-cache "$DATASET_CACHE" \
   --output-dir "$OUTPUT_DIR" \
@@ -109,7 +120,7 @@ python "$ROOT/training/evaluate.py" \
   --env-url "$ENV_URL" \
   --base-model "$MODEL_ID" \
   --adapter "$OUTPUT_DIR" \
-  --episodes-per-task "$EVAL_EPISODES" \
+  --episodes-per-task "$EVAL_RUN_EPISODES" \
   --base-seed 10000 \
   --output "$POST_JSON" \
   --label post-train

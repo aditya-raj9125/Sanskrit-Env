@@ -60,7 +60,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--base-model", default="Qwen/Qwen2.5-1.5B-Instruct")
     parser.add_argument("--adapter", default=None, help="Optional path to a PEFT/LoRA adapter directory.")
     parser.add_argument("--tasks", nargs="*", default=TASK_IDS)
-    parser.add_argument("--episodes-per-task", type=int, default=30)
+    parser.add_argument(
+        "--episodes-per-task",
+        type=int,
+        default=30,
+        help="Episodes per task; values below 1 are raised to 1 so the model always runs at least one env episode.",
+    )
     parser.add_argument("--base-seed", type=int, default=10_000)
     parser.add_argument("--difficulty", default="auto")
     parser.add_argument("--max-new-tokens", type=int, default=96)
@@ -222,6 +227,13 @@ def evaluate(args: argparse.Namespace) -> Dict[str, Any]:
 
 def main() -> None:
     args = parse_args()
+    if args.episodes_per_task < 1:
+        print(
+            f"[info] episodes_per_task={args.episodes_per_task} is below 1; using 1 "
+            "so the model is exercised for at least one episode per task.",
+            flush=True,
+        )
+        args.episodes_per_task = 1
     print(f"[info] env_url={args.env_url} base={args.base_model} adapter={args.adapter}", flush=True)
     print(f"[info] tasks={args.tasks} episodes_per_task={args.episodes_per_task}", flush=True)
 

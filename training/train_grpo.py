@@ -36,7 +36,7 @@ import urllib.error
 import urllib.request
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 TASK_IDS = [
     "glossary_anchoring",
@@ -46,6 +46,8 @@ TASK_IDS = [
     "manuscript_restoration",
     "full_manuscript_session",
 ]
+# “Easy” decision tasks (1–4); 5–6 are longer multi-step / manuscript runs.
+TASK_IDS_EASY = TASK_IDS[:4]
 
 
 # ───────────────────────── Env HTTP client ─────────────────────────
@@ -215,9 +217,30 @@ def match_to_option(raw: str, options: List[str]) -> str:
 # ───────────────────────── Dataset collection ─────────────────────────
 
 
+def _env_positive_int(name: str) -> Optional[int]:
+    """Parse EPISODES_PER_TASK_EASY style env; empty or non-positive => None."""
+    raw = (os.environ.get(name) or "").strip()
+    if not raw:
+        return None
+    v = int(raw)
+    return None if v <= 0 else v
+
+
+def resolve_training_episode_counts(
+    tasks: List[str],
+    uniform: int,
+    easy: Optional[int],
+) -> Union[int, Dict[str, int]]:
+    """If `easy` is set, use it for TASK_IDS_EASY (tasks 1–4); all others use `uniform`."""
+    if easy is None:
+        return uniform
+    easy_set = set(TASK_IDS_EASY)
+    return {t: (easy if t in easy_set else uniform) for t in tasks}
+
+
 def collect_prompt_dataset(
     env_url: str,
-    episodes_per_task: int,
+    episodes_per_task: Union[int, Dict[str, int]],
     base_seed: int,
     tasks: List[str],
     difficulty: Optional[str] = None,
@@ -227,13 +250,17 @@ def collect_prompt_dataset(
     Returns a list of dicts with keys: prompt, options, task_id, seed.
     The same (task_id, seed) is replayed at reward time to score completions
     deterministically against the env grader.
+
+    `episodes_per_task` is either a single int (same for every task) or a map
+    task_id -> episode count.
     """
     from datasets import Dataset
 
     rows: List[Dict[str, Any]] = []
     for task in tasks:
-        print(f"[collect] task={task} episodes={episodes_per_task}", flush=True)
-        for ep in range(episodes_per_task):
+        n = episodes_per_task[task] if isinstance(episodes_per_task, dict) else episodes_per_task
+        print(f"[collect] task={task} episodes={n}", flush=True)
+        for ep in range(n):
             seed = base_seed + ep * 7919 + (abs(hash(task)) % 9999)
             try:
                 obs = env_reset(env_url, task, seed=seed, difficulty=difficulty)
@@ -439,7 +466,22 @@ def parse_args() -> argparse.Namespace:
         help="SanskritEnv HTTP base (OpenAPI /reset, /step). Default: ENV_URL, else HF_SPACE_URL, else the project HF Space.",
     )
     parser.add_argument("--model-id", default=os.environ.get("MODEL_ID", "Qwen/Qwen2.5-1.5B-Instruct"))
-    parser.add_argument("--episodes-per-task", type=int, default=int(os.environ.get("EPISODES_PER_TASK", "1500")))
+    parser.add_argument(
+        "--episodes-per-task",
+        type=int,
+        default=int(os.environ.get("EPISODES_PER_TASK", "1500")),
+        help="Episodes for tasks 5–6 (and for all tasks if --episodes-per-task-easy is not set).",
+    )
+    parser.add_argument(
+        "--episodes-per-task-easy",
+        type=int,
+        default=_env_positive_int("EPISODES_PER_TASK_EASY"),
+        help=(
+            "Episodes for tasks 1–4 (glossary_anchoring, sandhi, samasa, referential). "
+            "Omit or set a non-positive value (or unset EPISODES_PER_TASK_EASY) to use "
+            "the same count as --episodes-per-task for every task. Env: EPISODES_PER_TASK_EASY."
+        ),
+    )
     parser.add_argument("--tasks", nargs="*", default=TASK_IDS, help="Subset of task ids to train on.")
     parser.add_argument("--difficulty", default="auto", help="Used by tasks 5/6 (beginner|intermediate|hard|expert|auto).")
     parser.add_argument("--base-seed", type=int, default=42)
@@ -471,7 +513,11 @@ def parse_args() -> argparse.Namespace:
         "--eval-episodes-per-task",
         type=int,
         default=20,
-        help="Episodes per task for the per-epoch evaluation callback. Set 0 to disable.",
+        help=(
+            "Episodes per task for per-epoch and post-training eval. Use 0 to disable those. "
+            "Pre-training baseline still runs 1 episode/task if --baseline-eval (default) so the "
+            "model is exercised before GRPO."
+        ),
     )
     parser.add_argument(
         "--eval-base-seed",
@@ -491,7 +537,10 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Path for the metrics history JSON. Defaults to <output_dir>/metrics_history.json.",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.episodes_per_task_easy is not None and args.episodes_per_task_easy <= 0:
+        args.episodes_per_task_easy = None
+    return args
 
 
 def maybe_load_or_save_dataset(args, build_fn):
@@ -517,7 +566,19 @@ def main() -> None:
     args = parse_args()
 
     print(f"[info] env_url={args.env_url} model={args.model_id}", flush=True)
-    print(f"[info] tasks={args.tasks} episodes_per_task={args.episodes_per_task}", flush=True)
+    ep_counts = resolve_training_episode_counts(
+        args.tasks, args.episodes_per_task, args.episodes_per_task_easy
+    )
+    if isinstance(ep_counts, dict):
+        print(
+            f"[info] tasks={args.tasks} episodes (1–4 easy, rest --episodes-per-task)={ep_counts}",
+            flush=True,
+        )
+    else:
+        print(
+            f"[info] tasks={args.tasks} episodes_per_task={ep_counts} (uniform)",
+            flush=True,
+        )
 
     try:
         ping = _http_post(f"{args.env_url}/reset", {"task_id": "glossary_anchoring", "seed": args.base_seed})
@@ -537,7 +598,7 @@ def main() -> None:
     def build_dataset_fn():
         raw = collect_prompt_dataset(
             env_url=args.env_url,
-            episodes_per_task=args.episodes_per_task,
+            episodes_per_task=ep_counts,
             base_seed=args.base_seed,
             tasks=args.tasks,
             difficulty=args.difficulty,
@@ -620,6 +681,13 @@ def main() -> None:
         difficulty=args.difficulty,
         max_new_tokens=args.max_completion_length,
     )
+    # At least one episode before training so base+LoRA is callable (generate + env step), even
+    # when per-epoch eval is disabled (eval_episodes_per_task==0).
+    if args.baseline_eval:
+        baseline_episodes = args.eval_episodes_per_task if args.eval_episodes_per_task > 0 else 1
+    else:
+        baseline_episodes = 0
+    baseline_eval_kwargs = {**eval_kwargs, "episodes_per_task": baseline_episodes}
 
     from transformers import TrainerCallback
 
@@ -667,10 +735,13 @@ def main() -> None:
         callbacks=[EpochEvalCallback()] if args.eval_episodes_per_task > 0 else None,
     )
 
-    if args.baseline_eval and args.eval_episodes_per_task > 0:
-        print(f"[eval] running baseline pass ({args.eval_episodes_per_task} episodes/task)...", flush=True)
+    if args.baseline_eval and baseline_episodes > 0:
+        print(
+            f"[eval] running baseline pass ({baseline_episodes} episodes/task, pre-training sanity)...",
+            flush=True,
+        )
         t0 = time.time()
-        baseline_metrics = evaluate_policy(trainer.model, tokenizer, **eval_kwargs)
+        baseline_metrics = evaluate_policy(trainer.model, tokenizer, **baseline_eval_kwargs)
         elapsed = time.time() - t0
         metrics_history.append(
             {
