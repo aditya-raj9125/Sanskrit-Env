@@ -40,7 +40,7 @@ TASK_IDS = [
 ]
 
 DEFAULT_MODEL = os.environ.get(
-    "BASELINE_MODEL", "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    "BASELINE_MODEL", "@cf/meta/llama-3.2-3b-instruct"
 )
 DEFAULT_TASK = os.environ.get("BASELINE_TASK", "all")
 DEFAULT_EPISODES = int(os.environ.get("EPISODES_PER_TASK", "5"))

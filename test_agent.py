@@ -37,7 +37,7 @@ TASK_IDS = [
 ]
 
 DEFAULTS = {
-    "model": os.environ.get("TEST_MODEL", "@cf/meta/llama-3.3-70b-instruct-fp8-fast"),
+    "model": os.environ.get("TEST_MODEL", "@cf/meta/llama-3.2-3b-instruct"),
     "provider": os.environ.get("TEST_PROVIDER", "cloudflare"),
     "task": os.environ.get("TEST_TASK", "all"),
     "episodes": int(os.environ.get("TEST_EPISODES", "10")),
