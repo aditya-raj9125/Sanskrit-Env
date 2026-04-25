@@ -491,7 +491,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--grad-accum", type=int, default=4, help="Gradient accumulation steps (A100 default).")
     parser.add_argument("--epochs", type=float, default=1.0, help="Number of full passes over the prompt set.")
     parser.add_argument("--lr", type=float, default=5e-6)
-    parser.add_argument("--max-prompt-length", type=int, default=1024)
+    parser.add_argument(
+        "--max-prompt-length",
+        type=int,
+        default=1024,
+        help="Token-level truncation of each training prompt (applied to the dataset; not a GRPOConfig arg in recent trl).",
+    )
     parser.add_argument("--max-completion-length", type=int, default=96)
     parser.add_argument("--lora-r", type=int, default=16)
     parser.add_argument("--lora-alpha", type=int, default=32)
@@ -541,6 +546,31 @@ def parse_args() -> argparse.Namespace:
     if args.episodes_per_task_easy is not None and args.episodes_per_task_easy <= 0:
         args.episodes_per_task_easy = None
     return args
+
+
+def truncate_dataset_prompts(
+    dataset: Any,
+    tokenizer: Any,
+    max_length: int,
+):
+    """TRL recent GRPOConfig no longer takes max_prompt_length; apply truncation on the `prompt` column."""
+    if max_length <= 0 or len(dataset) == 0 or "prompt" not in (dataset.column_names or []):
+        return dataset
+
+    def _row(ex: Dict[str, Any]) -> Dict[str, Any]:
+        p = ex.get("prompt") or ""
+        if not p:
+            return ex
+        enc = tokenizer(
+            p,
+            max_length=max_length,
+            truncation=True,
+            add_special_tokens=False,
+        )
+        ex["prompt"] = tokenizer.decode(enc["input_ids"], skip_special_tokens=True)
+        return ex
+
+    return dataset.map(_row, desc=f"truncate prompts (max {max_length} tok)")
 
 
 def maybe_load_or_save_dataset(args, build_fn):
@@ -610,6 +640,7 @@ def main() -> None:
         return templated
 
     dataset = maybe_load_or_save_dataset(args, build_dataset_fn)
+    dataset = truncate_dataset_prompts(dataset, tokenizer, args.max_prompt_length)
 
     if args.dry_run:
         print("[dry-run] dataset preview:")
@@ -657,7 +688,6 @@ def main() -> None:
         gradient_accumulation_steps=args.grad_accum,
         learning_rate=args.lr,
         num_train_epochs=args.epochs,
-        max_prompt_length=args.max_prompt_length,
         max_completion_length=args.max_completion_length,
         logging_steps=args.logging_steps,
         save_steps=args.save_steps,
