@@ -8,6 +8,8 @@ Usage (from your machine; never commit tokens):
   python training/submit_hf_job.py
   python training/submit_hf_job.py --namespace YourHFUsername --flavor a10g-small --smoke --timeout 45m
   python training/submit_hf_job.py --namespace YourHFUsername --flavor a100-large --timeout 12h
+  # Full pipeline check: 5 train ep/task, 2 eval ep/task (baseline + post + compare), separate e2e artifacts
+  python training/submit_hf_job.py --namespace YourHFUsername --e2e-pipeline --flavor a100-large --timeout 3h
 """
 
 from __future__ import annotations
@@ -66,11 +68,20 @@ def main() -> int:
         help="Set SMOKE_TEST=1 in the job (tiny episode count, 0.1 epoch, no standalone baseline).",
     )
     parser.add_argument(
+        "--e2e-pipeline",
+        action="store_true",
+        help="Set E2E_PIPELINE_TEST=1: baseline (2 ep/task) + train (5 ep/task) + post + compare; uses separate cache/output paths.",
+    )
+    parser.add_argument(
         "--namespace",
         default=os.environ.get("HF_JOB_NAMESPACE", "").strip() or None,
         help="Hub username or org for the job URL. If set, skips /whoami-v2 (avoids 429 on rapid resubmits). Env: HF_JOB_NAMESPACE.",
     )
     args = parser.parse_args()
+
+    if args.smoke and args.e2e_pipeline:
+        print("error: use either --smoke or --e2e-pipeline, not both.", file=sys.stderr)
+        return 1
 
     token = os.environ.get("HF_TOKEN")
     if not token:
@@ -106,9 +117,12 @@ def main() -> int:
     }
     if args.smoke or os.environ.get("SMOKE_TEST") == "1":
         env["SMOKE_TEST"] = "1"
+    elif args.e2e_pipeline or os.environ.get("E2E_PIPELINE_TEST") == "1":
+        env["E2E_PIPELINE_TEST"] = "1"
     for key in (
         "EPISODES_PER_TASK",
         "EPISODES_PER_TASK_EASY",
+        "E2E_PIPELINE_TEST",
         "TRAIN_EPOCHS",
         "EVAL_EPISODES",
         "EVAL_DURING_TRAIN",
@@ -137,6 +151,10 @@ def main() -> int:
     print(f"  clone:   {args.repo_url}", flush=True)
     if args.namespace:
         print(f"  namespace: {args.namespace} (skips whoami; avoids /whoami-v2 429)", flush=True)
+    if env.get("SMOKE_TEST") == "1":
+        print("  mode:    smoke (minimal, no standalone baseline by default)", flush=True)
+    elif env.get("E2E_PIPELINE_TEST") == "1":
+        print("  mode:    e2e-pipeline (5 ep/task train, 2 ep/task eval, full baseline+train+post+compare)", flush=True)
 
     job = run_job(
         image=args.image,

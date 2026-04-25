@@ -15,7 +15,7 @@ fi
 export ENV_URL="${ENV_URL:-${HF_SPACE_URL:-https://adityahars-sanskrit-env.hf.space}}"
 export ENV_URL="${ENV_URL%/}"
 
-# SMOKE_TEST=1: short run to verify the job wiring (a few minutes)
+# SMOKE_TEST=1: minimal run, skips baseline by default, fast sanity check
 if [[ "${SMOKE_TEST:-0}" == "1" ]]; then
   export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-2}"
   export EPISODES_PER_TASK="${EPISODES_PER_TASK:-2}"
@@ -24,6 +24,21 @@ if [[ "${SMOKE_TEST:-0}" == "1" ]]; then
   export EVAL_DURING_TRAIN="${EVAL_DURING_TRAIN:-0}"
   export NO_BASELINE_EVAL="${NO_BASELINE_EVAL:-1}"
   echo "[smoke] EPISODES_PER_TASK_EASY=$EPISODES_PER_TASK_EASY EPISODES_PER_TASK=$EPISODES_PER_TASK EVAL_EPISODES=$EVAL_EPISODES TRAIN_EPOCHS=$TRAIN_EPOCHS"
+# E2E_PIPELINE_TEST=1: full path baseline -> train -> post -> compare, tiny counts (5 ep/task train, 2 ep/task eval)
+elif [[ "${E2E_PIPELINE_TEST:-0}" == "1" ]]; then
+  export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-5}"
+  export EPISODES_PER_TASK="${EPISODES_PER_TASK:-5}"
+  export TRAIN_EPOCHS="${TRAIN_EPOCHS:-1.0}"
+  export EVAL_EPISODES="${EVAL_EPISODES:-2}"
+  export EVAL_DURING_TRAIN="${EVAL_DURING_TRAIN:-2}"
+  export NO_BASELINE_EVAL="${NO_BASELINE_EVAL:-0}"
+  # Separate paths so a full run does not load this small cache or overwrite eval artifacts
+  export DATASET_CACHE="${DATASET_CACHE:-$ROOT/runs/prompts_e2e_pipeline.jsonl}"
+  export OUTPUT_DIR="${OUTPUT_DIR:-$ROOT/runs/qwen25-1p5b-grpo-e2e-pipeline}"
+  export BASELINE_JSON="${BASELINE_JSON:-$ROOT/runs/eval_baseline_e2e.json}"
+  export POST_JSON="${POST_JSON:-$ROOT/runs/eval_post_e2e.json}"
+  export IMPROVE_MD="${IMPROVE_MD:-$ROOT/runs/improvement_table_e2e.md}"
+  echo "[e2e-pipeline] train 5 ep/task, eval 2 ep/task, baseline+post+compare; DATASET_CACHE=$DATASET_CACHE OUTPUT_DIR=$OUTPUT_DIR"
 else
   export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-700}"
   export EPISODES_PER_TASK="${EPISODES_PER_TASK:-1500}"
