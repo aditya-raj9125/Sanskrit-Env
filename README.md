@@ -289,11 +289,48 @@ Run manuscript restoration at hard difficulty with 10 episodes:
 python test_agent.py --task manuscript_restoration --difficulty hard --episodes 10
 ```
 
-## Baseline Results
+## Test Results
 
-| Model | Episodes | Glossary | Sandhi | Samasa | Coherence | Restoration | Session | Overall |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | 20 | 1.000 | 1.000 | 0.970 | 0.700 | pending | pending | 0.917 |
-| `@cf/meta/llama-3.1-70b-instruct` | 5 | 1.000 | 1.000 | 1.000 | 0.700 | pending | pending | 0.925 |
-| `@cf/meta/llama-3.1-8b-instruct` | 5 | 1.000 | 1.000 | 1.000 | 0.280 | pending | pending | 0.820 |
-| `@cf/meta/llama-3.2-3b-instruct` | 5 | 1.000 | 0.800 | 0.480 | 0.140 | pending | pending | 0.605 |
+Recorded from `test_results.json` using seed `42` at `2026-04-25T11:04:57.679768+00:00`. The current run used `@cf/meta/llama-3.2-3b-instruct` through the `cloudflare` provider over 3 episodes per task. Overall score across all tasks: mean `0.465`, std `0.352`.
+
+### Task 1 - Glossary Anchoring
+
+| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.333 | 0.236 | 1.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+
+### Task 2 - Sandhi Resolution
+
+| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.400 | 0.402 | 1.000 | 0.000 | 0.000 | 0.000 | 0.333 | 0.471 |
+| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+
+### Task 3 - Samasa Classification
+
+| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.483 | 0.388 | 1.000 | 0.000 | 0.000 | 0.000 | 0.333 | 0.471 |
+| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+
+### Task 4 - Referential Coherence
+
+| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.067 | 0.047 | 4.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+
+### Task 5 - Manuscript Restoration
+
+| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.650 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | 1.000 | 0.000 |
+| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+
+### Task 6 - Full Manuscript Session
+
+| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.857 | 0.066 | 8.000 | 0.000 | 3.667 | 0.471 | 1.000 | 0.000 |
+| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
