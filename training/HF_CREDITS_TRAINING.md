@@ -66,11 +66,11 @@ cd /path/to/sanskrit-env
 export HF_TOKEN=hf_...   # or run: hf auth login
 # Quick wiring test (minutes):
 python training/submit_hf_job.py --smoke --flavor a10g-small --timeout 45m
-# Full GRPO (long; increase --timeout as needed, e.g. 6h+):
-python training/submit_hf_job.py --flavor a100-large --timeout 6h
+# Full GRPO on A100 (set namespace; 1 epoch is default in hf_job_entrypoint / train_grpo; use 12h+ timeout):
+python training/submit_hf_job.py --namespace YourHFUsername --flavor a100-large --timeout 12h
 ```
 
-The script calls [`run_job()`](https://huggingface.co/docs/huggingface_hub/guides/jobs) with `secrets={"HF_TOKEN": ...}`. The clone **URL and branch** are set as `SANSKRIT_GIT_CLONE_URL` / `SANSKRIT_GIT_BRANCH` in the job `env` (not crammed into one giant shell string) so the Hub does not mangle quotes. The job uses `bash -c` (not `bash -lc`) and installs **git** + **ca-certificates** before `git clone`. It prints a **Job URL** where you can follow logs.
+The script calls [`run_job()`](https://huggingface.co/docs/huggingface_hub/guides/jobs) with `secrets={"HF_TOKEN": ...}`. The bootstrap uses `bash -c` (not `bash -lc`), **`set -eo` without `-u`**, installs **git** + **ca-certificates**, then **`git clone`** with **shlex-quoted** URL and branch in the command string. It prints a **Job URL** where you can follow logs; the first line from our script should be **`[hf-job] bootstrap: installing git + cloning repo`**.
 
 **HTTP 429 on the deployed Space (`/reset` / `/step`):** The Space rate-limits rapid requests. The trainer now **paces** calls to `hf.space` URLs (~0.35s between requests) and **retries** on 429. If logs still show many `[warn] reset failed ... 429`, set **`SANSKRIT_ENV_MIN_INTERVAL=0.6`** (or `1.0`) in the **job environment** (or on your machine) before training. Slower, but reliable.
 

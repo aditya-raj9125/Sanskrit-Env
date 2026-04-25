@@ -7,12 +7,14 @@ Usage (from your machine; never commit tokens):
   # Set HF_JOB_NAMESPACE to your Hub username to avoid /whoami-v2 rate limits (429) on repeated submits.
   python training/submit_hf_job.py
   python training/submit_hf_job.py --namespace YourHFUsername --flavor a10g-small --smoke --timeout 45m
+  python training/submit_hf_job.py --namespace YourHFUsername --flavor a100-large --timeout 12h
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+import shlex
 import sys
 
 
@@ -40,8 +42,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--timeout",
-        default=os.environ.get("HF_JOB_TIMEOUT", "6h"),
-        help='Max job wall time, e.g. "6h", "90m" (Hub default is often 30m if omitted in API).',
+        default=os.environ.get("HF_JOB_TIMEOUT", "12h"),
+        help='Max job wall time, e.g. "12h", "6h" (Hub default is often 30m if omitted in API).',
     )
     parser.add_argument(
         "--repo-url",
@@ -84,17 +86,16 @@ def main() -> int:
         print("error: pip install -U huggingface_hub", e, file=sys.stderr)
         return 1
 
-    # Clone URL/branch are passed as job *environment* variables so the command string stays tiny and
-    # nothing breaks when the Hub API serialises the job spec (avoids broken quoting / crash loops).
-    # bash -c (not -lc) so the same env block run_job() injects is visible to the non-login shell.
+    # Inline shlex-quoted clone (reliable in job JSON). No `set -u` in bootstrap (Hub env can omit vars).
+    repo_quoted = shlex.quote(args.repo_url.strip())
+    branch_quoted = shlex.quote(args.repo_branch.strip())
     cmd = (
-        "set -euo pipefail; "
+        "echo \"[hf-job] bootstrap: installing git + cloning repo\"; "
+        "set -eo pipefail; "
         "export DEBIAN_FRONTEND=noninteractive; "
-        "echo \"[hf-job] bootstrap: branch=${SANSKRIT_GIT_BRANCH}\"; "
         "apt-get update -qq; "
         "apt-get install -y -qq --no-install-recommends ca-certificates git; "
-        'test -n "${SANSKRIT_GIT_CLONE_URL:-}"; test -n "${SANSKRIT_GIT_BRANCH:-}"; '
-        'git clone --depth 1 -b "$SANSKRIT_GIT_BRANCH" "$SANSKRIT_GIT_CLONE_URL" /tmp/sanskrit-env; '
+        f"git clone --depth 1 -b {branch_quoted} {repo_quoted} /tmp/sanskrit-env; "
         "test -f /tmp/sanskrit-env/training/scripts/hf_job_entrypoint.sh; "
         "exec bash /tmp/sanskrit-env/training/scripts/hf_job_entrypoint.sh"
     )
@@ -102,8 +103,6 @@ def main() -> int:
     env: dict[str, str] = {
         "ENV_URL": args.env_url.rstrip("/"),
         "HF_SPACE_URL": args.env_url.rstrip("/"),
-        "SANSKRIT_GIT_CLONE_URL": args.repo_url.strip(),
-        "SANSKRIT_GIT_BRANCH": args.repo_branch.strip(),
     }
     if args.smoke or os.environ.get("SMOKE_TEST") == "1":
         env["SMOKE_TEST"] = "1"
@@ -133,8 +132,8 @@ def main() -> int:
     print(f"  flavor:  {args.flavor}", flush=True)
     print(f"  timeout: {args.timeout}", flush=True)
     print(f"  env_url: {env['ENV_URL']}", flush=True)
-    print(f"  branch:  {env['SANSKRIT_GIT_BRANCH']}", flush=True)
-    print(f"  clone:   {env['SANSKRIT_GIT_CLONE_URL']}", flush=True)
+    print(f"  branch:  {args.repo_branch}", flush=True)
+    print(f"  clone:   {args.repo_url}", flush=True)
     if args.namespace:
         print(f"  namespace: {args.namespace} (skips whoami; avoids /whoami-v2 429)", flush=True)
 

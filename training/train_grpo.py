@@ -447,7 +447,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--group-size", type=int, default=8, help="GRPO num_generations per prompt (A100 default).")
     parser.add_argument("--per-device-batch", type=int, default=2, help="Per-device batch size (A100 default).")
     parser.add_argument("--grad-accum", type=int, default=4, help="Gradient accumulation steps (A100 default).")
-    parser.add_argument("--epochs", type=float, default=2.0, help="Number of full passes over the prompt set.")
+    parser.add_argument("--epochs", type=float, default=1.0, help="Number of full passes over the prompt set.")
     parser.add_argument("--lr", type=float, default=5e-6)
     parser.add_argument("--max-prompt-length", type=int, default=1024)
     parser.add_argument("--max-completion-length", type=int, default=96)
