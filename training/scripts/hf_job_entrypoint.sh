@@ -40,10 +40,11 @@ elif [[ "${E2E_PIPELINE_TEST:-0}" == "1" ]]; then
   export IMPROVE_MD="${IMPROVE_MD:-$ROOT/runs/improvement_table_e2e.md}"
   echo "[e2e-pipeline] train 5 ep/task, eval 2 ep/task, baseline+post+compare; DATASET_CACHE=$DATASET_CACHE OUTPUT_DIR=$OUTPUT_DIR"
 else
-  export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-700}"
-  export EPISODES_PER_TASK="${EPISODES_PER_TASK:-1500}"
+  # Full production run: 500 ep/task (uniform across all tasks), 50 ep/task eval, 1 epoch.
+  export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-500}"
+  export EPISODES_PER_TASK="${EPISODES_PER_TASK:-500}"
   export TRAIN_EPOCHS="${TRAIN_EPOCHS:-1.0}"
-  export EVAL_EPISODES="${EVAL_EPISODES:-30}"
+  export EVAL_EPISODES="${EVAL_EPISODES:-50}"
   export EVAL_DURING_TRAIN="${EVAL_DURING_TRAIN:-20}"
   export NO_BASELINE_EVAL="${NO_BASELINE_EVAL:-0}"
 fi
@@ -54,11 +55,16 @@ BASELINE_JSON="${BASELINE_JSON:-$ROOT/runs/eval_baseline.json}"
 POST_JSON="${POST_JSON:-$ROOT/runs/eval_post.json}"
 IMPROVE_MD="${IMPROVE_MD:-$ROOT/runs/improvement_table.md}"
 MODEL_ID="${MODEL_ID:-Qwen/Qwen2.5-1.5B-Instruct}"
+# Hub push: set PUSH_TO_HUB=1 + HUB_MODEL_ID=Adityahars/sanskrit-qwen-grpo (or pass via submit_hf_job.py --push-to-hub)
+HUB_MODEL_ID="${HUB_MODEL_ID:-Adityahars/sanskrit-qwen-grpo}"
 
 echo "[info] repo root: $ROOT"
 echo "[info] ENV_URL=$ENV_URL"
 echo "[info] MODEL_ID=$MODEL_ID OUTPUT_DIR=$OUTPUT_DIR"
 echo "[info] EPISODES_PER_TASK_EASY=$EPISODES_PER_TASK_EASY EPISODES_PER_TASK(hard)=$EPISODES_PER_TASK"
+if [[ "${PUSH_TO_HUB:-0}" == "1" ]]; then
+  echo "[info] PUSH_TO_HUB=1 -> adapter will be pushed to Hub as $HUB_MODEL_ID after training"
+fi
 
 echo "[info] pip install (training)..."
 python -m pip install -q -U pip
@@ -111,6 +117,9 @@ if [[ "$EVAL_DURING_TRAIN" == "0" ]]; then
 else
   TRAIN_EXTRAS+=(--eval-episodes-per-task "$EVAL_DURING_TRAIN")
 fi
+if [[ "${PUSH_TO_HUB:-0}" == "1" ]]; then
+  TRAIN_EXTRAS+=(--push-to-hub --hub-model-id "$HUB_MODEL_ID")
+fi
 
 echo "[info] train_grpo.py..."
 python "$ROOT/training/train_grpo.py" \
@@ -152,3 +161,33 @@ else
 fi
 
 echo "[done] artifacts under $ROOT/runs/"
+
+# Upload adapter to Hub (if PUSH_TO_HUB=1).
+# Re-upload is a fast no-op when train_grpo --push-to-hub already pushed the same files.
+if [[ "${PUSH_TO_HUB:-0}" == "1" ]]; then
+  echo "[info] uploading adapter to Hub: $HUB_MODEL_ID ..."
+  python - <<'PYEOF'
+import os, sys
+from pathlib import Path
+output_dir = os.environ.get("OUTPUT_DIR", "/tmp/sanskrit-env/runs/qwen25-1p5b-grpo")
+hub_model_id = os.environ.get("HUB_MODEL_ID", "Adityahars/sanskrit-qwen-grpo")
+hf_token = os.environ.get("HF_TOKEN")
+if not Path(output_dir).exists():
+    print(f"[warn] OUTPUT_DIR={output_dir} not found; skipping hub upload", file=sys.stderr)
+    sys.exit(0)
+try:
+    from huggingface_hub import HfApi
+    api = HfApi(token=hf_token)
+    api.create_repo(repo_id=hub_model_id, exist_ok=True, private=False)
+    api.upload_folder(
+        repo_id=hub_model_id,
+        folder_path=output_dir,
+        repo_type="model",
+        commit_message="GRPO LoRA adapter upload from HF Job",
+    )
+    print(f"[ok] adapter uploaded to https://huggingface.co/{hub_model_id}")
+except Exception as e:
+    print(f"[warn] hub upload failed: {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
+fi

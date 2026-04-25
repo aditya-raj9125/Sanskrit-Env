@@ -66,8 +66,12 @@ cd /path/to/sanskrit-env
 export HF_TOKEN=hf_...   # or run: hf auth login
 # Quick wiring test (minutes):
 python training/submit_hf_job.py --smoke --flavor a10g-small --timeout 45m
-# Full GRPO on A100 (set namespace; 1 epoch is default in hf_job_entrypoint / train_grpo; use 12h+ timeout):
+# E2E pipeline check (5 ep/task, full baseline+train+post+compare):
+python training/submit_hf_job.py --e2e-pipeline --flavor a100-large --timeout 3h
+# Full GRPO on A100 (1 epoch, 500 ep/task, 50 eval ep/task, 12h+ timeout):
 python training/submit_hf_job.py --flavor a100-large --timeout 12h
+# *** FINAL TRAINING: push trained LoRA adapter to huggingface.co/Adityahars/sanskrit-qwen-grpo ***
+python training/submit_hf_job.py --push-to-hub --flavor a100-large --timeout 12h
 ```
 
 The script calls [`run_job()`](https://huggingface.co/docs/huggingface_hub/guides/jobs) with `secrets={"HF_TOKEN": ...}`. The bootstrap uses `bash -c` (not `bash -lc`), **`set -eo` without `-u`**, installs **git** + **ca-certificates**, then **`git clone`** with **shlex-quoted** URL and branch in the command string. It prints a **Job URL** where you can follow logs; the first line from our script should be **`[hf-job] bootstrap: installing git + cloning repo`**.
@@ -83,11 +87,13 @@ Or pass `python training/submit_hf_job.py --namespace Adityahars ...`. Wait a fe
 
 **Forwarded environment variables** (optional): set any of `EPISODES_PER_TASK`, `TRAIN_EPOCHS`, `MODEL_ID`, `OUTPUT_DIR`, `GROUP_SIZE`, etc., before `submit_hf_job.py`; they are passed into the job as plain `env` (not secrets). Training knobs are the same as `train_grpo.py`.
 
-**Smoke test:** `SMOKE_TEST=1` (or `python training/submit_hf_job.py --smoke`) uses tiny episode counts and `TRAIN_EPOCHS=0.1` to verify connectivity to the env and Hub download.
+**Smoke test:** `SMOKE_TEST=1` (or `--smoke`) uses tiny episode counts and `TRAIN_EPOCHS=0.1` to verify connectivity.
+
+**Push to Hub:** pass **`--push-to-hub`** (or set `PUSH_TO_HUB=1`) before `submit_hf_job.py`. The trained LoRA adapter is uploaded to **`HUB_MODEL_ID`** (default **`Adityahars/sanskrit-qwen-grpo`**). Access your model at `https://huggingface.co/Adityahars/sanskrit-qwen-grpo` after the job completes.
 
 ### Artifacts in the job
 
-Checkpoints and JSON live **inside the job filesystem** and are **lost when the job ends** unless you add a [volume](https://huggingface.co/docs/huggingface_hub/guides/jobs#mount-a-volume) (e.g. Hub bucket) or `huggingface_hub` upload in a follow-up step. For production, set `--push-to-hub` in `train_grpo.py` or upload `OUTPUT_DIR` with `HfApi().upload_folder` after training.
+Checkpoints and JSON live **inside the job filesystem** and are **lost when the job ends** unless you use **`--push-to-hub`** (default Hub repo: **`Adityahars/sanskrit-qwen-grpo`**). The entrypoint runs a final `upload_folder` to the Hub after training and post-eval, so passing **`--push-to-hub`** in `submit_hf_job.py` is all you need. Override the repo with `--hub-model-id` or `HUB_MODEL_ID` env.
 
 ## Option C: Your laptop / VM (GPU) + remote env
 
