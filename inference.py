@@ -47,6 +47,8 @@ TASK_SEQUENCE = [
     "sandhi_resolution",
     "samasa_classification",
     "referential_coherence",
+    "manuscript_restoration",
+    "full_manuscript_session",
 ]
 VALID_TASKS = set(TASK_SEQUENCE)
 TASK_LABELS = {
@@ -54,12 +56,16 @@ TASK_LABELS = {
     "sandhi_resolution": "sandhi resolution (medium)",
     "samasa_classification": "samasa classification (medium)",
     "referential_coherence": "referential coherence (hard)",
+    "manuscript_restoration": "manuscript restoration (expert)",
+    "full_manuscript_session": "full manuscript session (master)",
 }
 MAX_STEPS_BY_TASK = {
     "glossary_anchoring": 1,
     "sandhi_resolution": 1,
     "samasa_classification": 1,
     "referential_coherence": 7,
+    "manuscript_restoration": 10,
+    "full_manuscript_session": 20,
 }
 
 SYSTEM_PROMPT = """You are an expert Sanskrit manuscript interpreter.

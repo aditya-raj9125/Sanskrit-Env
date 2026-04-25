@@ -132,12 +132,12 @@ A violation occurs if the agent's final interpretation in the restoration phase 
 
 ## Baseline Benchmark Matrix
 
-| Model | Episodes | Glossary | Sandhi | Samāsa | Coherence | Restoration | Overall |
-|-------|----------|----------|--------|--------|-----------|-------------|---------|
-| @cf/meta/llama-3.3-70b-instruct-fp8-fast | 20 | 1.000 | 1.000 | 0.970 | 0.700 | — | 0.917 |
-| @cf/meta/llama-3.1-70b-instruct | 5 | 1.000 | 1.000 | 1.000 | 0.700 | — | 0.925 |
-| @cf/meta/llama-3.1-8b-instruct | 5 | 1.000 | 1.000 | 1.000 | 0.280 | — | 0.820 |
-| @cf/meta/llama-3.2-3b-instruct | 5 | 1.000 | 0.800 | 0.480 | 0.140 | — | 0.605 |
+| Model | Episodes | Glossary | Sandhi | Samāsa | Coherence | Restoration | Session | Overall |
+|-------|----------|----------|--------|--------|-----------|-------------|---------|---------|
+| @cf/meta/llama-3.3-70b-instruct-fp8-fast | 20 | 1.000 | 1.000 | 0.970 | 0.700 | — | — | 0.917 |
+| @cf/meta/llama-3.1-70b-instruct | 5 | 1.000 | 1.000 | 1.000 | 0.700 | — | — | 0.925 |
+| @cf/meta/llama-3.1-8b-instruct | 5 | 1.000 | 1.000 | 1.000 | 0.280 | — | — | 0.820 |
+| @cf/meta/llama-3.2-3b-instruct | 5 | 1.000 | 0.800 | 0.480 | 0.140 | — | — | 0.605 |
 
 ---
 

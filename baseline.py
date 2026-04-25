@@ -36,6 +36,7 @@ TASK_IDS = [
     "samasa_classification",
     "referential_coherence",
     "manuscript_restoration",
+    "full_manuscript_session",
 ]
 
 DEFAULT_MODEL = os.environ.get(
@@ -311,7 +312,7 @@ def main():
     for task_id in tasks:
         scores = []
         for ep_num in range(args.episodes):
-            seed = rng.randint(0, 10000)
+            seed = args.seed + ep_num
             try:
                 result = run_episode(
                     base_url, task_id, args.model, seed,

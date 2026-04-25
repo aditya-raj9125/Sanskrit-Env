@@ -33,6 +33,7 @@ TASK_IDS = [
     "samasa_classification",
     "referential_coherence",
     "manuscript_restoration",
+    "full_manuscript_session",
 ]
 
 DEFAULTS = {
@@ -277,7 +278,7 @@ def main():
         task_steps = []
 
         for ep_num in range(args.episodes):
-            seed = rng.randint(0, 10000)
+            seed = args.seed + ep_num
             diff = args.difficulty if task_id == "manuscript_restoration" else None
             try:
                 result = run_episode(
