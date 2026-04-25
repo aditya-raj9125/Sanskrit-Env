@@ -296,42 +296,42 @@ Recorded from `test_results.json` using seed `42` at `2026-04-25T11:04:57.679768
 
 ### Task 1 - Glossary Anchoring
 
-| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.333 | 0.236 | 1.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
-| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+| Run | Model | Provider | Episodes | Score Mean | Score Std |
+|---|---|---|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.333 | 0.236 |
+| Run 2 | pending | pending | pending | pending | pending |
 
 ### Task 2 - Sandhi Resolution
 
-| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.400 | 0.402 | 1.000 | 0.000 | 0.000 | 0.000 | 0.333 | 0.471 |
-| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+| Run | Model | Provider | Episodes | Score Mean | Score Std |
+|---|---|---|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.400 | 0.402 |
+| Run 2 | pending | pending | pending | pending | pending |
 
 ### Task 3 - Samasa Classification
 
-| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.483 | 0.388 | 1.000 | 0.000 | 0.000 | 0.000 | 0.333 | 0.471 |
-| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+| Run | Model | Provider | Episodes | Score Mean | Score Std |
+|---|---|---|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.483 | 0.388 |
+| Run 2 | pending | pending | pending | pending | pending |
 
 ### Task 4 - Referential Coherence
 
-| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.067 | 0.047 | 4.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
-| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+| Run | Model | Provider | Episodes | Score Mean | Score Std |
+|---|---|---|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.067 | 0.047 |
+| Run 2 | pending | pending | pending | pending | pending |
 
 ### Task 5 - Manuscript Restoration
 
-| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.650 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | 1.000 | 0.000 |
-| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+| Run | Model | Provider | Episodes | Score Mean | Score Std |
+|---|---|---|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.650 | 0.000 |
+| Run 2 | pending | pending | pending | pending | pending |
 
 ### Task 6 - Full Manuscript Session
 
-| Run | Model | Provider | Episodes | Score Mean | Score Std | Steps Mean | Steps Std | Tools Mean | Tools Std | Commit Mean | Commit Std |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.857 | 0.066 | 8.000 | 0.000 | 3.667 | 0.471 | 1.000 | 0.000 |
-| Run 2 | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending | pending |
+| Run | Model | Provider | Episodes | Score Mean | Score Std |
+|---|---|---|---:|---:|---:|
+| Run 1 | `@cf/meta/llama-3.2-3b-instruct` | `cloudflare` | 3 | 0.857 | 0.066 |
+| Run 2 | pending | pending | pending | pending | pending |
