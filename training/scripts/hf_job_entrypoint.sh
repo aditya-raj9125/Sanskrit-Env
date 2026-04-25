@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# Hugging Face Job entrypoint: optional baseline eval -> GRPO train -> post eval -> compare.
+# HF_TOKEN must be set (job secret). ENV_URL points at the deployed SanskritEnv Space.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT"
+export PYTHONUNBUFFERED=1
+
+if [[ -z "${HF_TOKEN:-}" ]]; then
+  echo "ERROR: HF_TOKEN is not set. Pass it as a job secret (see submit_hf_job.py)."
+  exit 1
+fi
+
+export ENV_URL="${ENV_URL:-${HF_SPACE_URL:-https://adityahars-sanskrit-env.hf.space}}"
+export ENV_URL="${ENV_URL%/}"
+
+# SMOKE_TEST=1: short run to verify the job wiring (a few minutes)
+if [[ "${SMOKE_TEST:-0}" == "1" ]]; then
+  export EPISODES_PER_TASK="${EPISODES_PER_TASK:-2}"
+  export TRAIN_EPOCHS="${TRAIN_EPOCHS:-0.1}"
+  export EVAL_EPISODES="${EVAL_EPISODES:-2}"
+  export EVAL_DURING_TRAIN="${EVAL_DURING_TRAIN:-0}"
+  export NO_BASELINE_EVAL="${NO_BASELINE_EVAL:-1}"
+  echo "[smoke] EPISODES_PER_TASK=$EPISODES_PER_TASK EVAL_EPISODES=$EVAL_EPISODES TRAIN_EPOCHS=$TRAIN_EPOCHS"
+else
+  export EPISODES_PER_TASK="${EPISODES_PER_TASK:-1500}"
+  export TRAIN_EPOCHS="${TRAIN_EPOCHS:-2.0}"
+  export EVAL_EPISODES="${EVAL_EPISODES:-30}"
+  export EVAL_DURING_TRAIN="${EVAL_DURING_TRAIN:-20}"
+  export NO_BASELINE_EVAL="${NO_BASELINE_EVAL:-0}"
+fi
+
+OUTPUT_DIR="${OUTPUT_DIR:-$ROOT/runs/qwen25-1p5b-grpo}"
+DATASET_CACHE="${DATASET_CACHE:-$ROOT/runs/prompts.jsonl}"
+BASELINE_JSON="${BASELINE_JSON:-$ROOT/runs/eval_baseline.json}"
+POST_JSON="${POST_JSON:-$ROOT/runs/eval_post.json}"
+IMPROVE_MD="${IMPROVE_MD:-$ROOT/runs/improvement_table.md}"
+MODEL_ID="${MODEL_ID:-Qwen/Qwen2.5-1.5B-Instruct}"
+
+echo "[info] repo root: $ROOT"
+echo "[info] ENV_URL=$ENV_URL"
+echo "[info] MODEL_ID=$MODEL_ID OUTPUT_DIR=$OUTPUT_DIR"
+
+echo "[info] pip install (training)..."
+python -m pip install -q -U pip
+python -m pip install -q -r "$ROOT/training/requirements-train.txt"
+
+echo "[info] wait for remote env /health..."
+for i in $(seq 1 90); do
+  if python -c "import requests; r=requests.get('$ENV_URL/health', timeout=30); assert r.status_code==200" 2>/dev/null; then
+    echo "[info] env healthy after ${i} attempt(s)"
+    break
+  fi
+  echo "[info] waiting... ($i/90)"
+  sleep 2
+done
+if ! python -c "import requests; r=requests.get('$ENV_URL/health', timeout=30); assert r.status_code==200"; then
+  echo "ERROR: $ENV_URL/health did not return 200."
+  exit 1
+fi
+
+mkdir -p "$(dirname "$BASELINE_JSON")" "$(dirname "$POST_JSON")" "$(dirname "$DATASET_CACHE")" "$OUTPUT_DIR"
+
+BASE_EVAL_ARGS=()
+if [[ "$NO_BASELINE_EVAL" == "1" ]]; then
+  echo "[info] skip standalone baseline"
+else
+  echo "[info] baseline evaluate.py..."
+  python "$ROOT/training/evaluate.py" \
+    --env-url "$ENV_URL" \
+    --base-model "$MODEL_ID" \
+    --episodes-per-task "$EVAL_EPISODES" \
+    --base-seed 10000 \
+    --output "$BASELINE_JSON" \
+    --label baseline-untrained
+  BASE_EVAL_ARGS=("$BASELINE_JSON")
+fi
+
+TRAIN_EXTRAS=()
+if [[ "$NO_BASELINE_EVAL" == "1" ]]; then
+  TRAIN_EXTRAS+=(--no-baseline-eval)
+fi
+if [[ "$EVAL_DURING_TRAIN" == "0" ]]; then
+  TRAIN_EXTRAS+=(--eval-episodes-per-task 0)
+else
+  TRAIN_EXTRAS+=(--eval-episodes-per-task "$EVAL_DURING_TRAIN")
+fi
+
+echo "[info] train_grpo.py..."
+python "$ROOT/training/train_grpo.py" \
+  --env-url "$ENV_URL" \
+  --model-id "$MODEL_ID" \
+  --episodes-per-task "$EPISODES_PER_TASK" \
+  --base-seed 42 \
+  --dataset-cache "$DATASET_CACHE" \
+  --output-dir "$OUTPUT_DIR" \
+  --group-size "${GROUP_SIZE:-8}" \
+  --per-device-batch "${PER_DEVICE_BATCH:-2}" \
+  --grad-accum "${GRAD_ACCUM:-4}" \
+  --epochs "$TRAIN_EPOCHS" \
+  --lr "${LR:-5e-6}" \
+  --max-completion-length "${MAX_COMPLETION_LENGTH:-96}" \
+  --eval-base-seed 10000 \
+  "${TRAIN_EXTRAS[@]}"
+
+echo "[info] post-training evaluate.py..."
+python "$ROOT/training/evaluate.py" \
+  --env-url "$ENV_URL" \
+  --base-model "$MODEL_ID" \
+  --adapter "$OUTPUT_DIR" \
+  --episodes-per-task "$EVAL_EPISODES" \
+  --base-seed 10000 \
+  --output "$POST_JSON" \
+  --label post-train
+
+if [[ ${#BASE_EVAL_ARGS[@]} -gt 0 ]]; then
+  echo "[info] compare_evals.py..."
+  python "$ROOT/training/compare_evals.py" \
+    "$BASELINE_JSON" \
+    "$POST_JSON" \
+    --markdown "$IMPROVE_MD"
+  cat "$IMPROVE_MD"
+else
+  echo "[info] skip compare (no baseline json)"
+fi
+
+echo "[done] artifacts under $ROOT/runs/"

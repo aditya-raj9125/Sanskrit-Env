@@ -50,6 +50,11 @@ def main() -> int:
         help="Public git URL to clone. For private GitHub, set SANSKRIT_ENV_REPO_URL in env (PAT in URL; never commit).",
     )
     parser.add_argument(
+        "--repo-branch",
+        default=(os.environ.get("SANSKRIT_ENV_REPO_BRANCH", "main") or "main").strip(),
+        help="Branch to clone (default: main). Set SANSKRIT_ENV_REPO_BRANCH to override.",
+    )
+    parser.add_argument(
         "--env-url",
         default=os.environ.get("ENV_URL", "https://adityahars-sanskrit-env.hf.space"),
         help="SanskritEnv HTTP base (deployed Space).",
@@ -81,10 +86,17 @@ def main() -> int:
         return 1
 
     repo_quoted = shlex.quote(args.repo_url)
+    branch_quoted = shlex.quote(args.repo_branch)
+    # Post-clone check: file must exist on the remote (see .gitignore: use /scripts/ not scripts/)
+    check_msg = (
+        "echo 'ERROR: training/scripts/hf_job_entrypoint.sh not in cloned repo. "
+        "Push the latest commit to GitHub (including training/scripts/) and re-run.' >&2; exit 127"
+    )
     cmd = (
         "set -euo pipefail && "
         "apt-get update -qq && apt-get install -y -qq git && "
-        f"git clone --depth 1 {repo_quoted} /tmp/sanskrit-env && "
+        f"git clone --depth 1 -b {branch_quoted} {repo_quoted} /tmp/sanskrit-env && "
+        f"test -f /tmp/sanskrit-env/training/scripts/hf_job_entrypoint.sh || {{ {check_msg}; }} && "
         "exec bash /tmp/sanskrit-env/training/scripts/hf_job_entrypoint.sh"
     )
 

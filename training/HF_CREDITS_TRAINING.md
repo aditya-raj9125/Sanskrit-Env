@@ -53,6 +53,7 @@ Use this when you want training to run on **Hugging Face managed GPU** (billed t
 
 ### Prerequisites
 
+- **Push this repo to GitHub** (including `training/scripts/hf_job_entrypoint.sh`). The job clones that URL. If the entrypoint is missing, the job will fail: use a **root-only** ignore for `scripts/` in `.gitignore` (`/scripts/`), not `scripts/`, or `training/scripts/` is never committed.
 - `pip install -U "huggingface_hub>=0.26"` (or your stack’s version that exposes `run_job`)
 - A Hugging Face **access token** with read access to models; never commit it
 - A **public** git URL for this repo, **or** a private URL with a GitHub PAT only in your shell: `SANSKRIT_ENV_REPO_URL=https://x-access-token:TOKEN@github.com/org/repo.git` (do not save that string in the repo)

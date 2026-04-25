@@ -41,6 +41,7 @@ Thumbs.db
 htmlcov/
 Changes.md
 tests/
-scripts/
+# Only ignore a `scripts/` folder at the repo root (not `training/scripts/` for HF Jobs).
+/scripts/
 
 
