@@ -120,6 +120,8 @@ def main() -> int:
         "GRAD_ACCUM",
         "LR",
         "MAX_COMPLETION_LENGTH",
+        "SANSKRIT_ENV_MIN_INTERVAL",
+        "SANSKRIT_ENV_HTTP_RETRIES",
     ):
         v = os.environ.get(key)
         if v is not None and v != "":

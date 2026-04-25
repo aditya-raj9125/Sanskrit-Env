@@ -29,6 +29,7 @@ Example usage (locally or in Colab after env server is up):
 import argparse
 import json
 import os
+import random
 import sys
 import time
 import urllib.error
@@ -49,17 +50,56 @@ TASK_IDS = [
 
 # ───────────────────────── Env HTTP client ─────────────────────────
 
+# Pacing: deployed HF Spaces rate-limit bursty /reset and /step traffic.
+_last_env_request_mono: float = 0.0
+
+
+def _pace_env_request(url: str) -> None:
+    """Enforce a minimum interval between env HTTP calls to reduce HTTP 429 on hf.space."""
+    global _last_env_request_mono
+    raw = (os.environ.get("SANSKRIT_ENV_MIN_INTERVAL") or "").strip()
+    if raw:
+        interval = max(0.0, float(raw))
+    else:
+        u = url.lower()
+        interval = 0.35 if ("hf.space" in u or "huggingface.co" in u) else 0.0
+    if interval <= 0.0:
+        return
+    now = time.monotonic()
+    wait = interval - (now - _last_env_request_mono)
+    if wait > 0:
+        time.sleep(wait)
+    _last_env_request_mono = time.monotonic()
+
 
 def _http_post(url: str, payload: Dict[str, Any], timeout: int = 60) -> Dict[str, Any]:
+    max_attempts = int(os.environ.get("SANSKRIT_ENV_HTTP_RETRIES", "12"))
     body = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "SanskritEnv-train_grpo/1.0",
+    }
+    for attempt in range(max_attempts):
+        _pace_env_request(url)
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 503) and attempt < max_attempts - 1:
+                ra = e.headers.get("Retry-After", "") if e.headers else ""
+                if ra and ra.isdigit():
+                    time.sleep(min(float(ra), 90.0))
+                else:
+                    time.sleep(min(2.0**attempt * 0.4 + random.random() * 0.5, 60.0))
+                continue
+            raise
+        except (urllib.error.URLError, OSError) as e:
+            if attempt < max_attempts - 1:
+                time.sleep(min(0.5 * (2**attempt), 20.0))
+                continue
+            raise
+    raise RuntimeError("unreachable")
 
 
 def _unwrap_observation(data: Dict[str, Any]) -> Dict[str, Any]:
