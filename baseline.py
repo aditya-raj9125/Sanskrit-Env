@@ -300,7 +300,6 @@ def main():
 
     base_url = get_env_url()
     tasks = TASK_IDS if args.task == "all" else [args.task]
-    rng = random.Random(args.seed)
 
     print(f"Running baseline: {args.model}")
     print(f"Environment: {base_url}")

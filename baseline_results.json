@@ -5,7 +5,7 @@
     "fallback_provider": "huggingface",
     "fallback_model": "Qwen/Qwen2.5-7B-Instruct",
     "task_id": "glossary_anchoring",
-    "label": "Task 1 \u2014 Glossary Anchoring (Easy)",
+    "label": "Task 1 — Glossary Anchoring (Easy)",
     "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "model_spec": "cloudflare:@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "episodes": 20,
@@ -41,7 +41,7 @@
     "fallback_provider": "huggingface",
     "fallback_model": "Qwen/Qwen2.5-7B-Instruct",
     "task_id": "sandhi_resolution",
-    "label": "Task 2 \u2014 Sandhi Resolution (Medium)",
+    "label": "Task 2 — Sandhi Resolution (Medium)",
     "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "model_spec": "cloudflare:@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "episodes": 20,
@@ -77,7 +77,7 @@
     "fallback_provider": "huggingface",
     "fallback_model": "Qwen/Qwen2.5-7B-Instruct",
     "task_id": "samasa_classification",
-    "label": "Task 3 \u2014 Samasa Classification (Medium)",
+    "label": "Task 3 — Samasa Classification (Medium)",
     "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "model_spec": "cloudflare:@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "episodes": 20,
@@ -113,7 +113,7 @@
     "fallback_provider": "huggingface",
     "fallback_model": "Qwen/Qwen2.5-7B-Instruct",
     "task_id": "referential_coherence",
-    "label": "Task 4 \u2014 Referential Coherence (Hard)",
+    "label": "Task 4 — Referential Coherence (Hard)",
     "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "model_spec": "cloudflare:@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "episodes": 20,
@@ -142,5 +142,22 @@
     ],
     "mean": 0.7,
     "stddev": 0.0
+  },
+  {
+    "model": "@cf/meta/llama-3.2-3b-instruct",
+    "timestamp": "2026-04-25T07:48:35.209835+00:00",
+    "seed": 42,
+    "summary": {
+      "overall_mean": 0.0,
+      "overall_std": 0.0,
+      "tasks": {
+        "manuscript_restoration": {
+          "mean": 0.0,
+          "std": 0.0,
+          "episodes": 1
+        }
+      }
+    },
+    "episodes": []
   }
 ]
