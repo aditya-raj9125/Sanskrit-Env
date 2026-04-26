@@ -34,7 +34,6 @@ import sys
 import time
 import urllib.error
 import urllib.request
-import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -453,6 +452,51 @@ def _save_metrics_history(metrics_path: Path, history: List[Dict[str, Any]]) -> 
         json.dump({"history": history}, f, ensure_ascii=False, indent=2)
 
 
+# ───────────────────────── Epoch eval callback ─────────────────────────
+
+
+class EpochEvalCallback:
+    """Runs an eval pass at the end of every epoch and persists metrics_history.json."""
+
+    def __init__(self, args, tokenizer, eval_kwargs, metrics_history, metrics_path):
+        self.args = args
+        self.tokenizer = tokenizer
+        self.eval_kwargs = eval_kwargs
+        self.metrics_history = metrics_history
+        self.metrics_path = metrics_path
+
+    def on_epoch_end(self, callback_args, state, control, **kwargs):
+        if self.args.eval_episodes_per_task <= 0:
+            return control
+        current_model = kwargs.get("model")
+        current_tokenizer = kwargs.get("processing_class") or self.tokenizer
+        print(
+            f"[eval] epoch={state.epoch:.2f} step={state.global_step} "
+            f"running {self.args.eval_episodes_per_task} episodes/task...",
+            flush=True,
+        )
+        t0 = time.time()
+        metrics = evaluate_policy(current_model, current_tokenizer, **self.eval_kwargs)
+        elapsed = time.time() - t0
+        entry = {
+            "phase": "post_epoch",
+            "epoch": float(state.epoch or 0.0),
+            "global_step": int(state.global_step or 0),
+            "elapsed_seconds": round(elapsed, 2),
+            "metrics": metrics,
+        }
+        self.metrics_history.append(entry)
+        _save_metrics_history(self.metrics_path, self.metrics_history)
+        overall = metrics["overall"]
+        print(
+            f"[eval] epoch={state.epoch:.2f} overall_mean={overall['score_mean']:.3f} "
+            f"std={overall['score_std']:.3f} success_rate={overall['success_rate']:.3f} "
+            f"({elapsed:.1f}s)",
+            flush=True,
+        )
+        return control
+
+
 # ───────────────────────── Training entrypoint ─────────────────────────
 
 
@@ -623,6 +667,11 @@ def maybe_load_or_save_dataset(args, build_fn):
 
 
 def main() -> None:
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+    from peft import LoraConfig, prepare_model_for_kbit_training
+    from trl import GRPOConfig, GRPOTrainer
+
     args = parse_args()
 
     print(f"[info] env_url={args.env_url} model={args.model_id}", flush=True)
@@ -630,15 +679,9 @@ def main() -> None:
         args.tasks, args.episodes_per_task, args.episodes_per_task_easy
     )
     if isinstance(ep_counts, dict):
-        print(
-            f"[info] tasks={args.tasks} episodes (1–4 easy, rest --episodes-per-task)={ep_counts}",
-            flush=True,
-        )
+        print(f"[info] tasks={args.tasks} episodes per task (split)={ep_counts}", flush=True)
     else:
-        print(
-            f"[info] tasks={args.tasks} episodes_per_task={ep_counts} (uniform)",
-            flush=True,
-        )
+        print(f"[info] tasks={args.tasks} episodes_per_task={ep_counts} (uniform)", flush=True)
 
     try:
         ping = _http_post(f"{args.env_url}/reset", {"task_id": "glossary_anchoring", "seed": args.base_seed})
@@ -647,8 +690,6 @@ def main() -> None:
     except Exception as exc:
         print(f"[fatal] cannot reach env at {args.env_url}: {exc}", file=sys.stderr)
         sys.exit(1)
-
-    from transformers import AutoModelForCausalLM, AutoTokenizer
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_id, trust_remote_code=True)
     if tokenizer.pad_token_id is None:
@@ -663,11 +704,10 @@ def main() -> None:
             tasks=args.tasks,
             difficulty=args.difficulty,
         )
-        templated = raw.map(
+        return raw.map(
             lambda ex: {"prompt": format_chat_prompt(tokenizer, ex["prompt"])},
             desc="apply chat template",
         )
-        return templated
 
     dataset = maybe_load_or_save_dataset(args, build_dataset_fn)
     dataset = truncate_dataset_prompts(dataset, tokenizer, args.max_prompt_length)
@@ -678,24 +718,17 @@ def main() -> None:
             print(json.dumps({k: dataset[0][k] for k in dataset.column_names}, ensure_ascii=False, indent=2)[:2000])
         return
 
-    quant_config = None
     model_kwargs: Dict[str, Any] = {"trust_remote_code": True}
     if args.load_in_4bit:
-        from transformers import BitsAndBytesConfig
-        import torch
-
-        quant_config = BitsAndBytesConfig(
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_use_double_quant=True,
         )
-        model_kwargs["quantization_config"] = quant_config
         model_kwargs["device_map"] = "auto"
 
     model = AutoModelForCausalLM.from_pretrained(args.model_id, **model_kwargs)
-
-    from peft import LoraConfig, prepare_model_for_kbit_training
 
     if args.load_in_4bit:
         model = prepare_model_for_kbit_training(model)
@@ -708,8 +741,6 @@ def main() -> None:
         bias="none",
         task_type="CAUSAL_LM",
     )
-
-    from trl import GRPOConfig, GRPOTrainer
 
     grpo_config = GRPOConfig(
         output_dir=args.output_dir,
@@ -741,49 +772,10 @@ def main() -> None:
         difficulty=args.difficulty,
         max_new_tokens=args.max_completion_length,
     )
-    # At least one episode before training so base+LoRA is callable (generate + env step), even
-    # when per-epoch eval is disabled (eval_episodes_per_task==0).
-    if args.baseline_eval:
-        baseline_episodes = args.eval_episodes_per_task if args.eval_episodes_per_task > 0 else 1
-    else:
-        baseline_episodes = 0
+    baseline_episodes = (args.eval_episodes_per_task if args.eval_episodes_per_task > 0 else 1) if args.baseline_eval else 0
     baseline_eval_kwargs = {**eval_kwargs, "episodes_per_task": baseline_episodes}
 
-    from transformers import TrainerCallback
-
-    class EpochEvalCallback(TrainerCallback):
-        """Runs an eval pass at the end of every epoch and persists metrics_history.json."""
-
-        def on_epoch_end(self, callback_args, state, control, **kwargs):
-            if args.eval_episodes_per_task <= 0:
-                return control
-            current_model = kwargs.get("model")
-            current_tokenizer = kwargs.get("processing_class") or tokenizer
-            print(
-                f"[eval] epoch={state.epoch:.2f} step={state.global_step} "
-                f"running {args.eval_episodes_per_task} episodes/task...",
-                flush=True,
-            )
-            t0 = time.time()
-            metrics = evaluate_policy(current_model, current_tokenizer, **eval_kwargs)
-            elapsed = time.time() - t0
-            entry = {
-                "phase": "post_epoch",
-                "epoch": float(state.epoch or 0.0),
-                "global_step": int(state.global_step or 0),
-                "elapsed_seconds": round(elapsed, 2),
-                "metrics": metrics,
-            }
-            metrics_history.append(entry)
-            _save_metrics_history(metrics_path, metrics_history)
-            overall = metrics["overall"]
-            print(
-                f"[eval] epoch={state.epoch:.2f} overall_mean={overall['score_mean']:.3f} "
-                f"std={overall['score_std']:.3f} success_rate={overall['success_rate']:.3f} "
-                f"({elapsed:.1f}s)",
-                flush=True,
-            )
-            return control
+    callback = EpochEvalCallback(args, tokenizer, eval_kwargs, metrics_history, metrics_path)
 
     trainer = GRPOTrainer(
         model=model,
@@ -792,7 +784,7 @@ def main() -> None:
         reward_funcs=make_reward_function(args.env_url, difficulty=args.difficulty),
         peft_config=peft_config,
         processing_class=tokenizer,
-        callbacks=[EpochEvalCallback()] if args.eval_episodes_per_task > 0 else None,
+        callbacks=[callback] if args.eval_episodes_per_task > 0 else None,
     )
 
     if args.baseline_eval and baseline_episodes > 0:

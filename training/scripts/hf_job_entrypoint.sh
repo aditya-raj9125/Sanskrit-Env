@@ -40,19 +40,19 @@ elif [[ "${E2E_PIPELINE_TEST:-0}" == "1" ]]; then
   export IMPROVE_MD="${IMPROVE_MD:-$ROOT/runs/improvement_table_e2e.md}"
   echo "[e2e-pipeline] train 5 ep/task, eval 2 ep/task, baseline+post+compare; DATASET_CACHE=$DATASET_CACHE OUTPUT_DIR=$OUTPUT_DIR"
 else
-  # Full run defaults — tuned for speed with HF Space env backend.
-  # group/batch 4 → 32 reward HTTP calls/step (vs 128 at 8×8); ~4× faster steps.
-  # All of these are overridden if the corresponding env var is already set by the caller.
-  export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-150}"
-  export EPISODES_PER_TASK="${EPISODES_PER_TASK:-150}"
-  export TRAIN_EPOCHS="${TRAIN_EPOCHS:-2.0}"
+  # Full run defaults — all values are overridden if already set by the caller via .env.
+  export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-1500}"
+  export EPISODES_PER_TASK="${EPISODES_PER_TASK:-1500}"
+  export TRAIN_EPOCHS="${TRAIN_EPOCHS:-1.0}"
   export EVAL_EPISODES="${EVAL_EPISODES:-50}"
-  export EVAL_DURING_TRAIN="${EVAL_DURING_TRAIN:-0}"
+  export EVAL_DURING_TRAIN="${EVAL_DURING_TRAIN:-15}"
   export NO_BASELINE_EVAL="${NO_BASELINE_EVAL:-0}"
-  export GROUP_SIZE="${GROUP_SIZE:-4}"
+  export GROUP_SIZE="${GROUP_SIZE:-8}"
   export PER_DEVICE_BATCH="${PER_DEVICE_BATCH:-4}"
-  export GRAD_ACCUM="${GRAD_ACCUM:-8}"
-  export SANSKRIT_ENV_MIN_INTERVAL="${SANSKRIT_ENV_MIN_INTERVAL:-0.1}"
+  export GRAD_ACCUM="${GRAD_ACCUM:-4}"
+  export LR="${LR:-2e-6}"
+  export SANSKRIT_ENV_MIN_INTERVAL="${SANSKRIT_ENV_MIN_INTERVAL:-0.15}"
+  export SANSKRIT_ENV_HTTP_RETRIES="${SANSKRIT_ENV_HTTP_RETRIES:-15}"
 fi
 
 OUTPUT_DIR="${OUTPUT_DIR:-$ROOT/runs/qwen25-1p5b-grpo}"
@@ -60,10 +60,9 @@ DATASET_CACHE="${DATASET_CACHE:-$ROOT/runs/prompts.jsonl}"
 BASELINE_JSON="${BASELINE_JSON:-$ROOT/runs/eval_baseline.json}"
 POST_JSON="${POST_JSON:-$ROOT/runs/eval_post.json}"
 IMPROVE_MD="${IMPROVE_MD:-$ROOT/runs/improvement_table.md}"
-MODEL_ID="${MODEL_ID:-Qwen/Qwen2.5-1.5B-Instruct}"
-# Hub push: set PUSH_TO_HUB=1 + HUB_MODEL_ID=...; prompts JSONL dataset: PUSH_PROMPTS_TO_HUB=1, HUB_PROMPTS_REPO, etc.
-HUB_MODEL_ID="${HUB_MODEL_ID:-Adityahars/sanskrit-qwen-grpo}"
-HUB_PROMPTS_REPO="${HUB_PROMPTS_REPO:-Adityahars/sanskrit-grpo-prompts}"
+MODEL_ID="${MODEL_ID:-Adityahars/sanskrit-qwen-grpo}"
+HUB_MODEL_ID="${HUB_MODEL_ID:-archijaiswal07/sanskrit-qwen-grpo-v3}"
+HUB_PROMPTS_REPO="${HUB_PROMPTS_REPO:-archijaiswal07/sanskrit-grpo-prompts}"
 HUB_PROMPTS_PATH_IN_REPO="${HUB_PROMPTS_PATH_IN_REPO:-data/prompts.jsonl}"
 
 echo "[info] repo root: $ROOT"

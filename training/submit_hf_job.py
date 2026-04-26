@@ -132,19 +132,18 @@ def main() -> int:
         print("error: pip install -U huggingface_hub", e, file=sys.stderr)
         return 1
 
-    # Inline shlex-quoted clone (reliable in job JSON). No `set -u` in bootstrap (Hub env can omit vars).
     repo_quoted = shlex.quote(args.repo_url.strip())
     branch_quoted = shlex.quote(args.repo_branch.strip())
-    cmd = (
-        "echo \"[hf-job] bootstrap: installing git + cloning repo\"; "
-        "set -eo pipefail; "
-        "export DEBIAN_FRONTEND=noninteractive; "
-        "apt-get update -qq; "
-        "apt-get install -y -qq --no-install-recommends ca-certificates git; "
-        f"git clone --depth 1 -b {branch_quoted} {repo_quoted} /tmp/sanskrit-env; "
-        "test -f /tmp/sanskrit-env/training/scripts/hf_job_entrypoint.sh; "
-        "exec bash /tmp/sanskrit-env/training/scripts/hf_job_entrypoint.sh"
-    )
+    cmd = "; ".join([
+        'echo "[hf-job] bootstrap: installing git + cloning repo"',
+        "set -eo pipefail",
+        "export DEBIAN_FRONTEND=noninteractive",
+        "apt-get update -qq",
+        "apt-get install -y -qq --no-install-recommends ca-certificates git",
+        f"git clone --depth 1 -b {branch_quoted} {repo_quoted} /tmp/sanskrit-env",
+        "test -f /tmp/sanskrit-env/training/scripts/hf_job_entrypoint.sh",
+        "exec bash /tmp/sanskrit-env/training/scripts/hf_job_entrypoint.sh",
+    ])
 
     env: dict[str, str] = {
         "ENV_URL": args.env_url.rstrip("/"),
@@ -164,29 +163,37 @@ def main() -> int:
         env["PULL_PROMPTS_FROM_HUB"] = "1"
         env["HUB_PROMPTS_REPO"] = args.hub_prompts_repo
     for key in (
+        "MODEL_ID",
         "EPISODES_PER_TASK",
         "EPISODES_PER_TASK_EASY",
-        "E2E_PIPELINE_TEST",
+        "TRAIN_EPOCHS",
+        "GROUP_SIZE",
+        "PER_DEVICE_BATCH",
+        "GRAD_ACCUM",
+        "LR",
+        "MAX_COMPLETION_LENGTH",
+        "MAX_PROMPT_LENGTH",
+        "LORA_R",
+        "LORA_ALPHA",
+        "LORA_DROPOUT",
+        "LOAD_IN_4BIT",
+        "LOGGING_STEPS",
+        "SAVE_STEPS",
+        "EVAL_EPISODES",
+        "EVAL_DURING_TRAIN",
+        "EVAL_BASE_SEED",
+        "NO_BASELINE_EVAL",
+        "OUTPUT_DIR",
+        "DATASET_CACHE",
         "PUSH_TO_HUB",
         "HUB_MODEL_ID",
         "PUSH_PROMPTS_TO_HUB",
         "PULL_PROMPTS_FROM_HUB",
         "HUB_PROMPTS_REPO",
         "HUB_PROMPTS_PATH_IN_REPO",
-        "TRAIN_EPOCHS",
-        "EVAL_EPISODES",
-        "EVAL_DURING_TRAIN",
-        "NO_BASELINE_EVAL",
-        "MODEL_ID",
-        "OUTPUT_DIR",
-        "DATASET_CACHE",
-        "GROUP_SIZE",
-        "PER_DEVICE_BATCH",
-        "GRAD_ACCUM",
-        "LR",
-        "MAX_COMPLETION_LENGTH",
         "SANSKRIT_ENV_MIN_INTERVAL",
         "SANSKRIT_ENV_HTTP_RETRIES",
+        "E2E_PIPELINE_TEST",
     ):
         v = os.environ.get(key)
         if v is not None and v != "":
