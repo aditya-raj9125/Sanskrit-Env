@@ -469,8 +469,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--episodes-per-task",
         type=int,
-        default=int(os.environ.get("EPISODES_PER_TASK", "250")),
-        help="Episodes for tasks 5–6 (and for all tasks if --episodes-per-task-easy is not set).",
+        default=int(os.environ.get("EPISODES_PER_TASK", "150")),
+        help="Episodes for tasks 5–6 (and for all tasks if --episodes-per-task-easy is not set). Env: EPISODES_PER_TASK.",
     )
     parser.add_argument(
         "--episodes-per-task-easy",
@@ -484,51 +484,79 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--tasks", nargs="*", default=TASK_IDS, help="Subset of task ids to train on.")
     parser.add_argument("--difficulty", default="auto", help="Used by tasks 5/6 (beginner|intermediate|hard|expert|auto).")
-    parser.add_argument("--base-seed", type=int, default=42)
-    parser.add_argument("--output-dir", default="runs/qwen25-1p5b-grpo")
-    parser.add_argument("--group-size", type=int, default=4, help="GRPO num_generations per prompt (smaller = faster, default 4).")
-    parser.add_argument("--per-device-batch", type=int, default=2, help="Per-device batch size (A100 default).")
-    parser.add_argument("--grad-accum", type=int, default=4, help="Gradient accumulation steps (A100 default).")
-    parser.add_argument("--epochs", type=float, default=1.0, help="Number of full passes over the prompt set.")
-    parser.add_argument("--lr", type=float, default=5e-6)
+    parser.add_argument("--base-seed", type=int, default=int(os.environ.get("BASE_SEED", "42")))
+    parser.add_argument("--output-dir", default=os.environ.get("OUTPUT_DIR", "runs/qwen25-1p5b-grpo"))
+    parser.add_argument(
+        "--group-size", type=int,
+        default=int(os.environ.get("GROUP_SIZE", "8")),
+        help="GRPO num_generations per prompt. Env: GROUP_SIZE.",
+    )
+    parser.add_argument(
+        "--per-device-batch", type=int,
+        default=int(os.environ.get("PER_DEVICE_BATCH", "8")),
+        help="Per-device batch size. Env: PER_DEVICE_BATCH.",
+    )
+    parser.add_argument(
+        "--grad-accum", type=int,
+        default=int(os.environ.get("GRAD_ACCUM", "4")),
+        help="Gradient accumulation steps. Env: GRAD_ACCUM.",
+    )
+    parser.add_argument(
+        "--epochs", type=float,
+        default=float(os.environ.get("TRAIN_EPOCHS", "2.0")),
+        help="Number of full passes over the prompt set. Env: TRAIN_EPOCHS.",
+    )
+    parser.add_argument(
+        "--lr", type=float,
+        default=float(os.environ.get("LR", "5e-6")),
+        help="Learning rate. Env: LR.",
+    )
     parser.add_argument(
         "--max-prompt-length",
         type=int,
-        default=1024,
-        help="Token-level truncation of each training prompt (applied to the dataset; not a GRPOConfig arg in recent trl).",
+        default=int(os.environ.get("MAX_PROMPT_LENGTH", "1024")),
+        help="Token-level truncation of each training prompt. Env: MAX_PROMPT_LENGTH.",
     )
-    parser.add_argument("--max-completion-length", type=int, default=96)
-    parser.add_argument("--lora-r", type=int, default=16)
-    parser.add_argument("--lora-alpha", type=int, default=32)
-    parser.add_argument("--lora-dropout", type=float, default=0.05)
+    parser.add_argument(
+        "--max-completion-length", type=int,
+        default=int(os.environ.get("MAX_COMPLETION_LENGTH", "96")),
+        help="Max tokens the model generates per step. Env: MAX_COMPLETION_LENGTH.",
+    )
+    parser.add_argument("--lora-r", type=int, default=int(os.environ.get("LORA_R", "16")))
+    parser.add_argument("--lora-alpha", type=int, default=int(os.environ.get("LORA_ALPHA", "32")))
+    parser.add_argument("--lora-dropout", type=float, default=float(os.environ.get("LORA_DROPOUT", "0.05")))
     parser.add_argument(
         "--load-in-4bit",
         action="store_true",
-        default=False,
-        help="Enable 4-bit QLoRA. Off by default; useful only on T4/V100 (<24 GB).",
+        default=os.environ.get("LOAD_IN_4BIT", "0") == "1",
+        help="Enable 4-bit QLoRA. Off by default; useful only on T4/V100 (<24 GB). Env: LOAD_IN_4BIT=1.",
     )
     parser.add_argument("--no-4bit", dest="load_in_4bit", action="store_false")
-    parser.add_argument("--logging-steps", type=int, default=5)
-    parser.add_argument("--save-steps", type=int, default=200)
-    parser.add_argument("--push-to-hub", action="store_true", default=False)
-    parser.add_argument("--hub-model-id", default=None)
-    parser.add_argument("--dataset-cache", default=None, help="Optional path to cache the prompt dataset (jsonl).")
+    parser.add_argument("--logging-steps", type=int, default=int(os.environ.get("LOGGING_STEPS", "5")))
+    parser.add_argument("--save-steps", type=int, default=int(os.environ.get("SAVE_STEPS", "200")))
+    parser.add_argument("--push-to-hub", action="store_true", default=os.environ.get("PUSH_TO_HUB") == "1")
+    parser.add_argument("--hub-model-id", default=os.environ.get("HUB_MODEL_ID"))
+    parser.add_argument(
+        "--dataset-cache",
+        default=os.environ.get("DATASET_CACHE"),
+        help="Optional path to cache the prompt dataset (jsonl). Env: DATASET_CACHE.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Only collect dataset and print stats.")
     parser.add_argument(
         "--eval-episodes-per-task",
         type=int,
-        default=20,
+        default=int(os.environ.get("EVAL_DURING_TRAIN", "10")),
         help=(
-            "Episodes per task for per-epoch and post-training eval. Use 0 to disable those. "
-            "Pre-training baseline still runs 1 episode/task if --baseline-eval (default) so the "
-            "model is exercised before GRPO."
+            "Episodes per task for per-epoch eval during training. Use 0 to disable. "
+            "Standalone pre/post eval is controlled by evaluate.py --episodes-per-task. "
+            "Env: EVAL_DURING_TRAIN."
         ),
     )
     parser.add_argument(
         "--eval-base-seed",
         type=int,
-        default=10_000,
-        help="Seed offset for evaluation episodes (kept disjoint from training seeds).",
+        default=int(os.environ.get("EVAL_BASE_SEED", "10000")),
+        help="Seed offset for evaluation episodes (kept disjoint from training seeds). Env: EVAL_BASE_SEED.",
     )
     parser.add_argument(
         "--baseline-eval",

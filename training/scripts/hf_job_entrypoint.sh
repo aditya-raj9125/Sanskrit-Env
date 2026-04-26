@@ -40,13 +40,16 @@ elif [[ "${E2E_PIPELINE_TEST:-0}" == "1" ]]; then
   export IMPROVE_MD="${IMPROVE_MD:-$ROOT/runs/improvement_table_e2e.md}"
   echo "[e2e-pipeline] train 5 ep/task, eval 2 ep/task, baseline+post+compare; DATASET_CACHE=$DATASET_CACHE OUTPUT_DIR=$OUTPUT_DIR"
 else
-  # Full run: 250 ep/task, lean eval, GRPO group_size=4 in train for speed. 1 epoch.
-  export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-250}"
-  export EPISODES_PER_TASK="${EPISODES_PER_TASK:-250}"
-  export TRAIN_EPOCHS="${TRAIN_EPOCHS:-1.0}"
-  export EVAL_EPISODES="${EVAL_EPISODES:-30}"
+  # Full run defaults: 150 ep/task (matches data files), 50 eval ep/task, 2 epochs, group/batch 8.
+  # All of these are overridden if the corresponding env var is already set by the caller.
+  export EPISODES_PER_TASK_EASY="${EPISODES_PER_TASK_EASY:-150}"
+  export EPISODES_PER_TASK="${EPISODES_PER_TASK:-150}"
+  export TRAIN_EPOCHS="${TRAIN_EPOCHS:-2.0}"
+  export EVAL_EPISODES="${EVAL_EPISODES:-50}"
   export EVAL_DURING_TRAIN="${EVAL_DURING_TRAIN:-10}"
   export NO_BASELINE_EVAL="${NO_BASELINE_EVAL:-0}"
+  export GROUP_SIZE="${GROUP_SIZE:-8}"
+  export PER_DEVICE_BATCH="${PER_DEVICE_BATCH:-8}"
 fi
 
 OUTPUT_DIR="${OUTPUT_DIR:-$ROOT/runs/qwen25-1p5b-grpo}"
@@ -168,8 +171,8 @@ python "$ROOT/training/train_grpo.py" \
   --base-seed 42 \
   --dataset-cache "$DATASET_CACHE" \
   --output-dir "$OUTPUT_DIR" \
-  --group-size "${GROUP_SIZE:-4}" \
-  --per-device-batch "${PER_DEVICE_BATCH:-2}" \
+  --group-size "${GROUP_SIZE:-8}" \
+  --per-device-batch "${PER_DEVICE_BATCH:-8}" \
   --grad-accum "${GRAD_ACCUM:-4}" \
   --epochs "$TRAIN_EPOCHS" \
   --lr "${LR:-5e-6}" \

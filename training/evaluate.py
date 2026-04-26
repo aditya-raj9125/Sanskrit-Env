@@ -57,25 +57,37 @@ def parse_args() -> argparse.Namespace:
             or "https://adityahars-sanskrit-env.hf.space"
         ),
     )
-    parser.add_argument("--base-model", default="Qwen/Qwen2.5-1.5B-Instruct")
+    parser.add_argument(
+        "--base-model",
+        default=os.environ.get("MODEL_ID", "Qwen/Qwen2.5-1.5B-Instruct"),
+        help="Base model id or local path. Env: MODEL_ID.",
+    )
     parser.add_argument("--adapter", default=None, help="Optional path to a PEFT/LoRA adapter directory.")
     parser.add_argument("--tasks", nargs="*", default=TASK_IDS)
     parser.add_argument(
         "--episodes-per-task",
         type=int,
-        default=30,
-        help="Episodes per task; values below 1 are raised to 1 so the model always runs at least one env episode.",
+        default=int(os.environ.get("EVAL_EPISODES", "50")),
+        help="Episodes per task; values below 1 are raised to 1. Env: EVAL_EPISODES.",
     )
-    parser.add_argument("--base-seed", type=int, default=10_000)
-    parser.add_argument("--difficulty", default="auto")
-    parser.add_argument("--max-new-tokens", type=int, default=96)
+    parser.add_argument(
+        "--base-seed", type=int,
+        default=int(os.environ.get("EVAL_BASE_SEED", "10000")),
+        help="Seed offset for evaluation episodes. Env: EVAL_BASE_SEED.",
+    )
+    parser.add_argument("--difficulty", default=os.environ.get("DIFFICULTY", "auto"))
+    parser.add_argument(
+        "--max-new-tokens", type=int,
+        default=int(os.environ.get("MAX_COMPLETION_LENGTH", "96")),
+        help="Max tokens the model generates per episode. Env: MAX_COMPLETION_LENGTH.",
+    )
     parser.add_argument(
         "--load-in-4bit",
         action="store_true",
-        default=False,
-        help="Use 4-bit weights for the base model. Off by default; useful on T4/V100.",
+        default=os.environ.get("LOAD_IN_4BIT", "0") == "1",
+        help="Use 4-bit weights for the base model. Env: LOAD_IN_4BIT=1.",
     )
-    parser.add_argument("--output", default="runs/eval.json")
+    parser.add_argument("--output", default=os.environ.get("EVAL_OUTPUT", "runs/eval.json"))
     parser.add_argument("--label", default=None, help="Optional human-readable label stored in the JSON.")
     return parser.parse_args()
 
@@ -188,14 +200,17 @@ def evaluate(args: argparse.Namespace) -> Dict[str, Any]:
         full_credit = sum(1 for s in scores if s >= 0.95) / n
         per_task[task] = {
             "n_episodes": len(scores),
+            "n_attempted": args.episodes_per_task,
             "score_mean": round(mean, 4),
             "score_std": round(std, 4),
             "success_rate": round(success, 4),
             "full_credit_rate": round(full_credit, 4),
         }
         all_scores.extend(scores)
+        failed = args.episodes_per_task - len(scores)
         print(
-            f"  [eval] {task:30s} mean={mean:.3f} std={std:.3f} success={success:.3f}",
+            f"  [eval] {task:30s} mean={mean:.3f} std={std:.3f} success={success:.3f}"
+            + (f" [WARN: {failed} episodes failed/skipped]" if failed else ""),
             flush=True,
         )
 
