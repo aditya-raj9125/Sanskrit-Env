@@ -414,9 +414,9 @@ A violation occurs when the restoration-phase final interpretation contradicts a
 
 ---
 
-## Test Results (Baseline Evaluations)
+## Test Results (Sample runs)
 
-Pre-training baseline runs against the live SanskritEnv API. Both runs use the same Cloudflare-hosted model and the same task pool — the difference is only episode count per task. These numbers are the **pre-training reference** that the GRPO run below has to improve on.
+Sample `test_agent.py` runs against the live SanskritEnv API. They are **illustrations only** — not a formal benchmark, not a pre-training “baseline,” and not the evaluation target for the fine-tuned model below. Both runs use the same Cloudflare-hosted model; the only difference is how many episodes were sampled per task (Run 1 is a short smoke run, Run 2 is longer).
 
 Model: `@cf/meta/llama-3.2-3b-instruct` · Provider: `cloudflare`
 
@@ -442,7 +442,7 @@ Model: `@cf/meta/llama-3.2-3b-instruct` · Provider: `cloudflare`
 | Manuscript Restoration | 10 | 0.573 | 0.304 | mean tools used: 1.4 · mean steps: 2.4 |
 | Full Manuscript Session | 10 | 0.824 | 0.042 | |
 
-> The weakest task at baseline is **Referential Coherence** (multi-step pronoun tracking) — exactly the failure mode this environment is built to expose. The strongest is **Full Manuscript Session**, which benefits from the model defaulting to safe answers across many short phases.
+> In these sample runs, the lowest mean score was on **Referential Coherence** (multi-step pronoun tracking). The highest was on **Full Manuscript Session** — a pattern that can appear when short phases are answered conservatively; treat these as anecdotal, not a rigorous ranking.
 
 ---
 
