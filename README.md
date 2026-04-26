@@ -8,6 +8,7 @@ app_port: 7860
 license: apache-2.0
 short_description: RL environment for Sanskrit manuscript interpretation
 url: https://huggingface.co/spaces/Adityahars/Sanskrit-env
+blog: https://huggingface.co/api/resolve-cache/spaces/Adityahars/Sanskrit-env/6da9e2cf9b57070f936af190d1655527058fcd38/Blog.md?%2Fspaces%2FAdityahars%2FSanskrit-env%2Fresolve%2Fmain%2FBlog.md=&etag=%2286ddc192f0ee832667863622448d7004cc64a3a4%22
 ---
 
 # SanskritEnv
