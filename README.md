@@ -34,28 +34,33 @@ The reason is a collapse in human expertise. Trained Sanskrit scholars capable o
 
 A nationwide survey launched in 2026 confirmed the crisis is active and growing. The ratio of trained scholars to digitized texts is estimated at **1:10,000** and widening every year.
 
-The three exact linguistic problems that block automated translation of these manuscripts are:
+The six linguistic problems that block automated translation of these manuscripts are:
 
 1. A single Sanskrit term can carry 4–6 domain-specific meanings with no contextual signal (**lexical ambiguity**).
-2. Compound words have multiple valid phonological splits with different meanings (**sandhi and samāsa ambiguity**).
-3. Pronouns and implicit subjects span multiple verses with no explicit antecedent markers (**referential ambiguity**).
+2. Compound words have multiple valid phonological splits with different meanings (**sandhi ambiguity**).
+3. Compound words must be structurally classified before they can be parsed (**samāsa ambiguity**).
+4. Pronouns and implicit subjects span multiple verses with no explicit antecedent markers (**referential ambiguity**).
+5. Interpretation requires gathering and weighing philological tool evidence before committing to a reading (**evidential reasoning**).
+6. All five layers must be resolved consistently across phases of a single document without contradiction (**compositional consistency**).
 
-SanskritEnv is the **first RL environment** built to train agents on exactly these three problems — using real passages from Ayurvedic, astronomical, philosophical, and narrative manuscripts currently sitting in India's national repositories.
+SanskritEnv is the **first RL environment** built to train agents on all six of these problems — using real passages from Ayurvedic, astronomical, philosophical, and narrative manuscripts currently sitting in India's national repositories.
 
 ---
 
-## The Four Linguistic Layers
+## The Six Linguistic Layers
 
-Projects like eGangotri have already rescued and scanned more than 60,000 rare texts and 1.4 crore pages. The bottleneck is not scanning technology — it is the shortage of scholars who can read classical Sanskrit across its four major difficulty layers:
+Projects like eGangotri have already rescued and scanned more than 60,000 rare texts and 1.4 crore pages. The bottleneck is not scanning technology — it is the shortage of scholars who can read classical Sanskrit across six major difficulty layers:
 
-| Layer | Problem | What blocks automation |
-|---|---|---|
-| Lexical | A single term (e.g. `agni`) has 4–6 domain-specific meanings | No contextual disambiguation |
-| Phonological | Compound words (sandhi) have multiple valid splits | Requires grammatical + contextual reasoning |
-| Morphological | Compound words (samāsa) must be classified before they can be parsed | Requires grammatical meta-knowledge |
-| Discourse | Pronouns and implicit subjects span multiple verses | Requires cross-sentence coreference tracking |
+| Layer | Task | Problem | What blocks automation |
+|---|---|---|---|
+| Lexical | Glossary Anchoring | A single term (e.g. `agni`) has 4–6 domain-specific meanings | No contextual disambiguation |
+| Phonological | Sandhi Resolution | Compound words have multiple valid phonological splits | Requires grammatical + contextual reasoning |
+| Morphological | Samāsa Classification | Compound words must be classified before they can be parsed | Requires grammatical meta-knowledge |
+| Discourse | Referential Coherence | Pronouns and implicit subjects span multiple verses | Requires cross-sentence coreference tracking |
+| Evidential | Manuscript Restoration | Interpretation requires weighing philological tool evidence before committing | No automated evidence-gathering pipeline for classical texts |
+| Compositional | Full Manuscript Session | All five layers must be resolved consistently across phases of a single document | Cross-layer contradictions collapse downstream parsing |
 
-These are the same four layers cited by Murugesh et al. (2019) *"A Survey of Sanskrit NLP"* as the primary obstacles to automated translation pipeline construction. SanskritEnv is the first OpenEnv environment targeting ancient-language manuscript interpretation, filling a gap that is both culturally significant and computationally underexplored.
+The first four layers are cited by Murugesh et al. (2019) *"A Survey of Sanskrit NLP"* as the primary obstacles to automated translation. SanskritEnv extends this benchmark with two higher-order layers — Evidential (tool-use POMDP) and Compositional (cross-phase consistency) — that no existing OpenEnv environment addresses.
 
 ---
 
@@ -63,8 +68,38 @@ These are the same four layers cited by Murugesh et al. (2019) *"A Survey of San
 
 SanskritEnv is a **decision environment**, not a translation model. At each step the agent receives a Sanskrit passage and must select the correct linguistic interpretation from deterministically-graded options.
 
-```
-Agent ──[ManuscriptAction]──► SanskritEnv ──[ManuscriptObservation + reward]──► Agent
+### Architecture
+
+```mermaid
+flowchart TD
+    A([📜 Sanskrit passage input]) --> B[Reset — new task]
+    B --> C[🏛️ SanskritEnv\nOpenEnv-compatible env]
+
+    C --> D[Observation]
+    D --> E[IAST & Devanāgarī\nEnglish context · Domain info\nCandidate options]
+
+    E --> F{Task type?}
+
+    F -->|Tasks 1–4\nSingle-step MCQ| G[🤖 Agent\nLLM + rolling memory]
+    F -->|Task 5\nTool-use POMDP| H[🤖 Agent\nLLM + tool calls]
+    F -->|Task 6\nFull session| I[🤖 Agent\nLLM + phase memory]
+
+    G --> J[ManuscriptAction\nselected_option]
+    H --> K[ManuscriptAction\ntool_call / commit]
+    I --> L[ManuscriptAction\nphase answer / commit]
+
+    J --> M[⚙️ env.step\nEvaluates choice\ncomputes reward]
+    K --> M
+    L --> M
+
+    M --> N{done?}
+
+    N -->|False| O[🧠 Memory update\nQ&A appended to history]
+    O --> G
+    O --> H
+    O --> I
+
+    N -->|True| P([🏆 Final episode score\n0.0 – 1.0])
 ```
 
 Six tasks of escalating difficulty:
@@ -226,22 +261,6 @@ A violation occurs when the restoration-phase final interpretation contradicts a
 
 **Promotion threshold:** mean of last 10 scores > 0.80 with at least 5 episodes  
 **De-escalation threshold:** mean < 0.45
-
----
-
-## Data Sources
-
-| Text | Domain | Tasks |
-|---|---|---|
-| Sushruta Samhita | Ayurveda | 1, 5, 6 |
-| Bhagavad Gita | Philosophy / Vedanta | 1, 2, 4, 5, 6 |
-| Charaka Samhita | Ayurveda | 1, 3, 6 |
-| Ramayana | Narrative | 2, 3, 4, 5, 6 |
-| Arthashastra | Political philosophy | 1, 3, 4, 5, 6 |
-| Surya Siddhanta | Astronomy | 5, 6 |
-| Aryabhatiya | Astronomy | 1, 3 |
-
-All Sanskrit texts are in the public domain (composed before 1928).
 
 ---
 
